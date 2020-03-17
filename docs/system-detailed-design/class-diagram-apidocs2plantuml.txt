@@ -1,0 +1,37 @@
+@startuml
+
+class MyEntity {
+    - Enum type
+    - String className
+    - MyEntity parentClass
+    - List<MyEntity>  parentInterfaces
+    - List<MyField> fields
+    - List<MyMethod> methods
+}
+
+class MyField {
+    - Enum visibility
+    - Boolean isStatic
+    - Boolean isFinal
+    - String type
+    - String name
+}
+
+class MyMethod {
+    - Enum visibility
+    - Boolean isStatic
+    - String returnType
+    - String name
+    - String List<MyParameter> params
+}
+
+Class MyParameter {
+    - String type
+    - String name
+}
+
+MyEntity *-- MyField
+MyEntity *-- MyMethod
+MyMethod *-- MyParameter
+
+@enduml
