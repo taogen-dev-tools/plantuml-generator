@@ -1,0 +1,21 @@
+@startuml
+
+actor User
+participant Main
+participant CommandHandler
+participant TaskController
+participant Generator
+
+User -> Main: input command
+Main -> CommandHandler: to check command
+CommandHandler -> CommandHandler: checking command
+CommandHandler -> Main: return checking result
+Main -> TaskController: to execute task
+TaskController -> TaskController: executing tasks
+TaskController -> Main: return executing result
+Main -> Generator: to generate plantuml
+Generator -> Generator: generating
+Generator -> Main: return generator result
+Main -> User: display the result
+
+@enduml

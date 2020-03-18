@@ -1,7 +1,12 @@
 @startuml
 
+'''''''''''''''''
+' Entities      '
+'''''''''''''''''
+
 class MyEntity {
     - Enum type
+    - String package
     - String className
     - MyEntity parentClass
     - List<MyEntity>  parentInterfaces
@@ -20,6 +25,7 @@ class MyField {
 class MyMethod {
     - Enum visibility
     - Boolean isStatic
+    - Boolean isAbstract
     - String returnType
     - String name
     - String List<MyParameter> params
@@ -33,5 +39,111 @@ Class MyParameter {
 MyEntity *-- MyField
 MyEntity *-- MyMethod
 MyMethod *-- MyParameter
+
+class MyCommand {
+    - String url
+    - String package
+    - Boolean subPackage
+}
+
+class ErrorMessage {
+    - errorCode
+    - errorMessage
+}
+
+''''''''''''''''''
+' Main           '
+
+''''''''''''''''''
+
+Class Main {
+
+}
+
+Main <.. CommandHandler
+Main <.. TaskController
+Main <.. Generator
+
+
+'''''''''''''''''''
+' Command Handler '
+'''''''''''''''''''
+
+class CommandHandler {
+    - String command
+    + ErrorMessage check()
+    + MyCommand getCommand()
+}
+
+
+''''''''''''''''''
+' Task           '
+''''''''''''''''''
+
+class TaskController {
+    - ConcurrentLinkedQueue<CrawlerTask> queue
+    - List<MyEntity> entities
+    + void execute(MyCommand command)
+}
+
+class CrawlerTask {
+    - Enum crawlerType
+    - Crawler crawler
+    + CrawlerTask(crawlerType, crawler)
+    + MyEntity call()
+}
+
+interface Callable<MyEntity>
+
+TaskController <.. CrawlerTask
+CrawlerTask <.. Crawler
+Callable <|.. CrawlerTask
+
+
+
+'''''''''''''''''''
+' Crawler         '
+'''''''''''''''''''
+
+interface Crawler {
+    + {abstract} MyEntity crawl()
+}
+
+class PackageCrawler {
+    - String url
+    + PackageCrawler(String url)
+    + MyEntity crawl()
+}
+
+class ClassesCrawler {
+    - String url
+    + ClassesCrawler(String url)
+    + MyEntity crawl()
+}
+
+class ClassDetailsCrawler {
+    - String url
+    + ClassDetailCrawler(String url)
+    + MyEntity crawl()
+}
+
+Crawler <|.. PackageCrawler
+Crawler <|.. ClassesCrawler
+Crawler <|.. ClassDetailsCrawler
+
+
+'''''''''''''''''''
+' Generator       '
+'''''''''''''''''''
+
+interface Generator {
+    + {abstract} Boolean generate(List<Entity> entities)
+}
+
+class ClassDiagramGenerator {
+    + Boolean generate(List<MyEntity> entities)
+}
+
+Generator <|.. ClassDiagramGenerator
 
 @enduml
