@@ -1,13 +1,13 @@
 package com.taogen.docs2uml;
 
 /**
- * Hello world!
- *
+ * @author Taogen
  */
-public class App 
+public class Main
 {
     public static void main( String[] args )
     {
-        System.out.println( "Hello World!" );
+
     }
+
 }
