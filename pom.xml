@@ -17,7 +17,7 @@
         <project.java.version>1.8</project.java.version>
         <junit.version>4.12</junit.version>
         <log4j.version>2.8.2</log4j.version>
-        <mvn.jar.plugin.mainclass>com.taogen.docs2uml.App</mvn.jar.plugin.mainclass>
+        <mvn.jar.plugin.mainclass>com.taogen.docs2uml.Main</mvn.jar.plugin.mainclass>
     </properties>
     <dependencies>
         <!-- ** Unit Test ** -->
