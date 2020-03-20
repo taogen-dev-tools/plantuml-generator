@@ -9,10 +9,12 @@ import java.util.List;
  * @author Taogen
  */
 @Data
+// TODO: update doc. Add new fields.
 public class MyEntity {
     private EntityType type;
     // TODO: update doc package -> packageName
     private String packageName;
+    private Boolean isAbstract;
     private String className;
     private String url;
     private MyEntity parentClass;
