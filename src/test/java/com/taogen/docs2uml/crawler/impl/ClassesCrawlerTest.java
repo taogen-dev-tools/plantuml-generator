@@ -15,8 +15,8 @@ public class ClassesCrawlerTest extends CrawlerTest{
     @Test
     public void crawl() {
         String url = "https://docs.oracle.com/javase/8/docs/api/java/io/package-frame.html";
-        classesCrawler.setMyCommand(new MyCommand(url));
-        List<MyEntity> myEntities = classesCrawler.crawl();
+//        classesCrawler.setMyCommand(new MyCommand(url));
+        List<MyEntity> myEntities = classesCrawler.crawl(new MyCommand(url));
         assertNotNull(myEntities);
         assertTrue(myEntities.size() > 0);
         checkUrlOfMyEntities(myEntities);

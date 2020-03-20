@@ -21,8 +21,8 @@ public class PackagesCrawlerTest extends CrawlerTest {
     @Test
     public void crawl() {
         String packageName = "java.util";
-        packagesCrawler.setMyCommand(new MyCommand(url, packageName));
-        List<MyEntity> myEntityList = packagesCrawler.crawl();
+//        packagesCrawler.setMyCommand(new MyCommand(url, packageName));
+        List<MyEntity> myEntityList = packagesCrawler.crawl(new MyCommand(url, packageName));
         assertNotNull(myEntityList);
         assertTrue(myEntityList.size() > 0);
         checkUrlOfMyEntities(myEntityList);
@@ -31,8 +31,8 @@ public class PackagesCrawlerTest extends CrawlerTest {
     @Test
     public void crawlTestFailConnectUrl() {
         try {
-            packagesCrawler.setMyCommand(new MyCommand("http://000.com", "java.test"));
-            packagesCrawler.crawl();
+//            packagesCrawler.setMyCommand(new MyCommand("http://000.com", "java.test"));
+            packagesCrawler.crawl(new MyCommand("http://000.com", "java.test"));
         } catch (KnownException e) {
             assertTrue(e instanceof FailConnectException);
         }
@@ -42,8 +42,8 @@ public class PackagesCrawlerTest extends CrawlerTest {
     public void crawlTestNotFoundElement() {
         String url = "https://docs.oracle.com/javase123123/8/docs/api/";
         try {
-            packagesCrawler.setMyCommand(new MyCommand(url, "java.test"));
-            packagesCrawler.crawl();
+//            packagesCrawler.setMyCommand(new MyCommand(url, "java.test"));
+            packagesCrawler.crawl(new MyCommand(url, "java.test"));
         } catch (KnownException e) {
             assertTrue(e instanceof NotFoundElementException);
         }
