@@ -23,23 +23,16 @@ public class ClassesCrawler extends AbstractCrawler {
 
     private static final Logger logger = LogManager.getLogger();
 
-    public ClassesCrawler() {
-    }
-
-    public ClassesCrawler(MyCommand myCommand) {
-        this.myCommand = myCommand;
-    }
-
     @Override
-    public List<MyEntity> crawl() {
-        Document document = getDocument(this.myCommand.getUrl());
-        Elements elements = getElementsByDocument(document);
-        return getEntitiesByElements(elements);
+    public List<MyEntity> crawl(MyCommand myCommand) {
+        Document document = getDocument(myCommand.getUrl());
+        Elements elements = getElementsByDocument(document, myCommand);
+        return getEntitiesByElements(elements, myCommand);
     }
 
-    private Elements getElementsByDocument(Document document) {
+    private Elements getElementsByDocument(Document document, MyCommand myCommand) {
         if (document == null) {
-            throw new FailConnectException(String.format(FAIL_TO_CONNECT_URL, this.myCommand.getUrl()));
+            throw new FailConnectException(String.format(FAIL_TO_CONNECT_URL, myCommand.getUrl()));
         }
         Elements elements = document.getElementsByAttributeValue("target", "classFrame");
         filterElements(elements);
@@ -61,16 +54,16 @@ public class ClassesCrawler extends AbstractCrawler {
         }
     }
 
-    private List<MyEntity> getEntitiesByElements(List<Element> elements) {
+    private List<MyEntity> getEntitiesByElements(List<Element> elements, MyCommand myCommand) {
         if (elements == null) {
-            throw new NotFoundElementException(String.format(NOT_FOUND_ELEMENTS_ERROR, this.myCommand.getUrl()));
+            throw new NotFoundElementException(String.format(NOT_FOUND_ELEMENTS_ERROR, myCommand.getUrl()));
         }
         List<MyEntity> myEntities = new ArrayList<>();
         for (Element element : elements) {
             String url = element.attr("href");
             String className = element.text();
             MyEntity myEntity = new MyEntity();
-            myEntity.setUrl(this.myCommand.getPrefixUrl() + url);
+            myEntity.setUrl(myCommand.getPrefixUrl() + url);
             myEntity.setClassName(className);
             myEntities.add(myEntity);
         }

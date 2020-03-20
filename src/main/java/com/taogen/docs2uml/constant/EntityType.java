@@ -15,5 +15,13 @@ public enum EntityType {
     /**
      * Abstract Class
      */
-    ABSTRACT
+    ABSTRACT,
+    /**
+     * Enum
+     */
+    ENUM,
+    /**
+     * Annotation
+     */
+    ANNOTATION
 }
