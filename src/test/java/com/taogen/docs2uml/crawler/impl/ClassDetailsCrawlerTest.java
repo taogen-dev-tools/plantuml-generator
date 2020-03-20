@@ -15,9 +15,19 @@ public class ClassDetailsCrawlerTest extends CrawlerTest{
     @Test
     public void crawl() {
         String url = "https://docs.oracle.com/javase/8/docs/api/java/io/BufferedInputStream.html";
-        classDetailsCrawler.setMyCommand(new MyCommand(url));
+        MyCommand myCommand = new MyCommand(url, "java.io");
+        classDetailsCrawler.setMyCommand(myCommand);
         List<MyEntity> myEntities = classDetailsCrawler.crawl();
         assertNotNull(myEntities);
         assertEquals(1, myEntities.size());
+        checkClassDetails(myEntities.get(0), myCommand);
+    }
+
+    private void checkClassDetails(MyEntity myEntity, MyCommand myCommand) {
+        assertNotNull(myEntity.getType());
+        assertNotNull(myEntity.getPackageName());
+        assertNotNull(myEntity.getClassName());
+        assertNotNull(myCommand.getPackageName());
+        assertTrue(myEntity.getPackageName().startsWith(myCommand.getPackageName()));
     }
 }
