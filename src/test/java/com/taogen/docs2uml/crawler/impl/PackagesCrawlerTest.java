@@ -1,8 +1,5 @@
 package com.taogen.docs2uml.crawler.impl;
 
-import com.taogen.docs2uml.constant.CrawlerType;
-import com.taogen.docs2uml.crawler.Crawler;
-import com.taogen.docs2uml.crawler.CrawlerFactory;
 import com.taogen.docs2uml.entity.MyCommand;
 import com.taogen.docs2uml.entity.MyEntity;
 import com.taogen.docs2uml.exception.FailConnectException;
@@ -15,25 +12,26 @@ import java.util.List;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-public class PackagesCrawlerTest {
+public class PackagesCrawlerTest extends CrawlerTest {
 
 
-    private Crawler packagesCrawler;
     private static String url = "https://docs.oracle.com/javase/8/docs/api/";
+    private PackagesCrawler packagesCrawler = new PackagesCrawler();
 
     @Test
     public void crawl() {
         String packageName = "java.util";
-        packagesCrawler = CrawlerFactory.create(CrawlerType.PACKAGES, new MyCommand(url, packageName));
+        packagesCrawler.setMyCommand(new MyCommand(url, packageName));
         List<MyEntity> myEntityList = packagesCrawler.crawl();
         assertNotNull(myEntityList);
         assertTrue(myEntityList.size() > 0);
+        checkUrlOfMyEntities(myEntityList);
     }
 
     @Test
-    public void crawlTestFailConnectUrl(){
+    public void crawlTestFailConnectUrl() {
         try {
-            packagesCrawler = CrawlerFactory.create(CrawlerType.PACKAGES, new MyCommand("http://test.test", "java.test"));
+            packagesCrawler.setMyCommand(new MyCommand("http://000.com", "java.test"));
             packagesCrawler.crawl();
         } catch (KnownException e) {
             assertTrue(e instanceof FailConnectException);
@@ -41,10 +39,10 @@ public class PackagesCrawlerTest {
     }
 
     @Test
-    public void crawlTestNotFoundElement(){
+    public void crawlTestNotFoundElement() {
         String url = "https://docs.oracle.com/javase123123/8/docs/api/";
         try {
-            packagesCrawler = CrawlerFactory.create(CrawlerType.PACKAGES, new MyCommand(url, "java.test"));
+            packagesCrawler.setMyCommand(new MyCommand(url, "java.test"));
             packagesCrawler.crawl();
         } catch (KnownException e) {
             assertTrue(e instanceof NotFoundElementException);

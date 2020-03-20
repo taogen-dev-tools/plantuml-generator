@@ -8,7 +8,7 @@ import java.util.List;
 
 import static org.junit.Assert.*;
 
-public class ClassesCrawlerTest {
+public class ClassesCrawlerTest extends CrawlerTest{
 
     private ClassesCrawler classesCrawler = new ClassesCrawler();
 
@@ -19,5 +19,6 @@ public class ClassesCrawlerTest {
         List<MyEntity> myEntities = classesCrawler.crawl();
         assertNotNull(myEntities);
         assertTrue(myEntities.size() > 0);
+        checkUrlOfMyEntities(myEntities);
     }
 }
