@@ -15,6 +15,10 @@ public class MyCommand {
     public MyCommand() {
     }
 
+    public MyCommand(String url){
+        this.url = url;
+    }
+
     public MyCommand(String url, String packageName) {
         this.url = url;
         this.packageName = packageName;
@@ -24,5 +28,12 @@ public class MyCommand {
         this.url = url;
         this.packageName = packageName;
         this.subPackage = subPackage;
+    }
+
+    public String getPrefixUrl(){
+        if (url != null){
+            return url.substring(0, url.lastIndexOf('/') + 1);
+        }
+        return null;
     }
 }
