@@ -60,13 +60,19 @@ public class PackagesCrawler extends AbstractCrawler {
     }
 
     private List<MyEntity> getEntityListByElements(Elements packageElements, MyCommand myCommand) {
-        if (packageElements == null){
+        if (packageElements == null) {
             throw new NotFoundElementException(String.format(NOT_FOUND_ELEMENTS_ERROR, myCommand.getUrl()));
         }
         List<MyEntity> myEntities = new ArrayList<>();
         for (Element element : packageElements) {
             String packageName = element.text();
-            if (packageName.startsWith(myCommand.getTopPackageName())){
+            boolean filterCondition;
+            if (myCommand.getSubPackage()) {
+                filterCondition = packageName.startsWith(myCommand.getTopPackageName());
+            } else {
+                filterCondition = packageName.trim().equals(myCommand.getTopPackageName());
+            }
+            if (filterCondition) {
                 String packageHref = element.attr("href");
                 MyEntity myEntity = new MyEntity();
                 myEntity.setPackageName(packageName);
