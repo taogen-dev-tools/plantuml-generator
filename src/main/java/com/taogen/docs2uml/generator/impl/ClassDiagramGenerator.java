@@ -18,7 +18,7 @@ import java.util.Map;
 public class ClassDiagramGenerator extends AbstractGenerator {
 
     @Override
-    public Boolean generate(List<MyEntity> myEntities) throws GeneratorException {
+    public Boolean generate(List<MyEntity> myEntities) {
         ensureGenerateDirExists();
         Map<String, Object> params = getParameters(myEntities);
         String templateFilename = "classDiagramTemplate.ftl";
@@ -27,7 +27,7 @@ public class ClassDiagramGenerator extends AbstractGenerator {
         return true;
     }
 
-    private void generateTemplate(String templateFilename, String generateFilename, Map<String, Object> params) throws GeneratorException {
+    private void generateTemplate(String templateFilename, String generateFilename, Map<String, Object> params) {
         try (
                 Writer consoleWriter = new OutputStreamWriter(System.out);
                 Writer fileWriter = new FileWriter(new File(new StringBuilder().append(GENERATE_DIRECTORY).append("/").append(generateFilename).toString()))
