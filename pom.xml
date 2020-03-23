@@ -60,6 +60,13 @@
             <version>2.4.0</version>
         </dependency>
 
+        <!-- template -->
+        <dependency>
+            <groupId>org.freemarker</groupId>
+            <artifactId>freemarker</artifactId>
+            <version>2.3.30</version>
+        </dependency>
+
         <!-- Tools -->
         <dependency>
             <groupId>com.google.code.gson</groupId>
