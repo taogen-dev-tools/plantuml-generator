@@ -68,7 +68,7 @@ public class ClassesCrawler extends AbstractCrawler {
             myEntity.setPackageName(myCommand.getPackageName());
             myEntities.add(myEntity);
         }
-        logger.debug("myEntities size is {}", myEntities.size());
+        logger.debug("Package {} classes size is {}", myCommand.getPackageName(), myEntities.size());
         return myEntities;
     }
 }
