@@ -13,7 +13,7 @@ ${myEntity.type} ${myEntity.className} {
     'methods
     <#if myEntity.methods??>
     <#list myEntity.methods as method>
-    ${method.visibility!""} ${method.isStatic!""} ${method.isAbstract!""} ${method.returnType!""} ${method.name} (${method.params!""})
+    ${method.visibility!""} ${method.isStatic!""} ${method.isAbstract!""} ${method.returnType!""} ${method.name}(${method.params!""})
     </#list>
     </#if>
 }
@@ -24,7 +24,11 @@ ${myEntity.parentClass} <|-- ${myEntity.className}
 </#if>
 <#if myEntity.parentInterfaces??>
 <#list myEntity.parentInterfaces as interfaceName>
+<#if myEntity.type == "interface">
 ${interfaceName} <|-- ${myEntity.className}
+<#else>
+${interfaceName} <|.. ${myEntity.className}
+</#if>
 </#list>
 </#if>
 
