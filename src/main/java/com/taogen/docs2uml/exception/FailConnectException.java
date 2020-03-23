@@ -3,7 +3,7 @@ package com.taogen.docs2uml.exception;
 /**
  * @author Taogen
  */
-public class FailConnectException extends KnownException {
+public class FailConnectException extends CrawlerException {
     public FailConnectException() {
     }
 

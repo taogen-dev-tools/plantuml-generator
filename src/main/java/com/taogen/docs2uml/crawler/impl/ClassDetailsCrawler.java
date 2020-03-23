@@ -81,7 +81,7 @@ public class ClassDetailsCrawler extends AbstractCrawler {
             if (methodsElement != null) {
                 methods.addAll(getMethodsByElement(methodsElement));
             }
-        } catch (IndexOutOfBoundsException | NullPointerException e) {
+        } catch (IndexOutOfBoundsException | NullPointerException | NotFoundElementException e) {
             logger.error("{}: {}", e.getClass().getName(), e.getMessage(), e);
             throw new NotFoundElementException(String.format(NOT_FOUND_ELEMENTS_ERROR, myCommand.getUrl()));
         }
@@ -226,7 +226,7 @@ public class ClassDetailsCrawler extends AbstractCrawler {
             return myParameters;
         }
         List<String> parameterEntries = new ArrayList<>();
-        if (!parametersText.contains("<")) {
+        if (!parametersText.contains(GENERIC_LEFT_MARK)) {
             parameterEntries = Arrays.asList(parametersText.split(","));
         } else {
             parameterEntries = handleDifficultParameterList(parametersText);
@@ -259,7 +259,7 @@ public class ClassDetailsCrawler extends AbstractCrawler {
             int indexLeft2 = indexLeft;
             int indexRight = parametersText.indexOf('>', indexBegin);
             if (indexLeft != -1 && indexRight != -1) {
-                while (parametersText.substring(indexLeft2 + 1, indexRight).contains("<")) {
+                while (parametersText.substring(indexLeft2 + 1, indexRight).contains(GENERIC_LEFT_MARK)) {
                     indexLeft2 = parametersText.indexOf('<', indexLeft2 + 1);
                     indexRight = parametersText.indexOf('>', indexRight + 1);
                 }

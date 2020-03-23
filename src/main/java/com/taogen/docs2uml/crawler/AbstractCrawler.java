@@ -14,8 +14,10 @@ import java.io.IOException;
  */
 @Data
 public abstract class AbstractCrawler implements Crawler {
-    public static final String NOT_FOUND_ELEMENTS_ERROR = "Not found elements form Web page. Please check your URL: %s";
-    public static final String FAIL_TO_CONNECT_URL = "Fail to connect the URL: %s";
+    protected static final String NOT_FOUND_ELEMENTS_ERROR = "Not found elements form Web page. Please check your URL: %s";
+    protected static final String FAIL_TO_CONNECT_URL = "Fail to connect the URL: %s";
+    protected static final String GENERIC_LEFT_MARK = "<";
+    protected static final String GENERIC_RIGHT_MARK = ">";
     private static final Logger logger = LogManager.getLogger();
 
     protected static Document getDocument(String url) {

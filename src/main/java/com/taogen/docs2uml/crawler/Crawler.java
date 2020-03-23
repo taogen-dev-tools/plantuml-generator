@@ -11,6 +11,7 @@ import java.util.List;
 public interface Crawler {
     /**
      * crawling information from Web page
+     *
      * @param myCommand crawling information
      * @return crawling result
      */

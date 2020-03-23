@@ -3,7 +3,7 @@ package com.taogen.docs2uml.exception;
 /**
  * @author Taogen
  */
-public class NotFoundElementException extends KnownException {
+public class NotFoundElementException extends CrawlerException {
     public NotFoundElementException() {
     }
 
