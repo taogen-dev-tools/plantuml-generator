@@ -15,7 +15,7 @@ public class ClassDetailsCrawlerTest extends CrawlerTest{
     @Test
     public void crawl() {
         String url = "https://docs.oracle.com/javase/8/docs/api/java/io/BufferedInputStream.html";
-        MyCommand myCommand = new MyCommand(url, "java.io");
+        MyCommand myCommand = new MyCommand(url, "java.io", "java.io");
 //        classDetailsCrawler.setMyCommand(myCommand);
         List<MyEntity> myEntities = classDetailsCrawler.crawl(myCommand);
         assertNotNull(myEntities);
