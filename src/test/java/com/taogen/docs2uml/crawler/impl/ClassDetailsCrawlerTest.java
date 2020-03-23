@@ -27,7 +27,7 @@ public class ClassDetailsCrawlerTest extends CrawlerTest{
         assertNotNull(myEntity.getType());
         assertNotNull(myEntity.getPackageName());
         assertNotNull(myEntity.getClassName());
-        assertNotNull(myCommand.getPackageName());
+        assertNotNull(myEntity.getPackageName());
         assertTrue(myEntity.getPackageName().startsWith(myCommand.getPackageName()));
     }
 }
