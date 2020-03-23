@@ -123,19 +123,21 @@ public class ClassDetailsCrawler extends AbstractCrawler {
 
     private List<MyEntity> getSuperInterfaces(Element descriptionElement, String className) {
         List<MyEntity> superInterfaces = new ArrayList<>();
-        Elements dlElemnets = descriptionElement.getElementsByTag("dl");
-        Elements parentInterfacesElements = null;
-        for (Element dl : dlElemnets) {
+        Elements dlElements = descriptionElement.getElementsByTag("dl");
+        String parentInterfacesText = null;
+        for (Element dl : dlElements) {
             String title = dl.getElementsByTag("dt").first().text();
             if (title.contains("Superinterfaces") || title.contains("Implemented Interfaces")) {
-                parentInterfacesElements = dl.getElementsByTag("dd").first().getElementsByTag("a");
+                parentInterfacesText = dl.getElementsByTag("dd").first().text();
                 break;
             }
         }
-        if (parentInterfacesElements != null) {
-            for (Element element : parentInterfacesElements) {
+        if (parentInterfacesText != null) {
+            String[] parentInterfaces = parentInterfacesText.split(",");
+            for (String interfaceStr : parentInterfaces) {
+                interfaceStr = interfaceStr.replaceAll("<[a-zA-Z]+>", "");
                 MyEntity myEntity = new MyEntity();
-                myEntity.setClassName(element.text());
+                myEntity.setClassName(interfaceStr);
                 superInterfaces.add(myEntity);
             }
         } else {
