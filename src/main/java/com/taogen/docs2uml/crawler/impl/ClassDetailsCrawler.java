@@ -22,6 +22,7 @@ import java.util.List;
  */
 public class ClassDetailsCrawler extends AbstractCrawler {
     private static final Logger logger = LogManager.getLogger();
+    private static final String OBJECT_CLASS_PATH = "java.lang.Object";
 
     @Override
     public List<MyEntity> crawl(MyCommand myCommand) {
@@ -58,7 +59,7 @@ public class ClassDetailsCrawler extends AbstractCrawler {
             // entity type
             entityType = EntityType.valueOf(classElementSplit[0].toUpperCase());
             // parent class
-            parentClass.setClassName(getParentClassName(document, className));
+            parentClass.setClassName(getParentClassName(document, className, myCommand));
             // package name
             packageName = packageElement.text();
             // super interfaces
@@ -99,13 +100,21 @@ public class ClassDetailsCrawler extends AbstractCrawler {
         return myEntities;
     }
 
-    private String getParentClassName(Document document, String className) {
+    private String getParentClassName(Document document, String className, MyCommand myCommand) {
         String parentClassName = null;
         try {
             Element inheritanceElement = document.getElementsByClass("inheritance").first();
-            Elements inheritanceElements = inheritanceElement.getElementsByTag("ul");
-            Element parentClassElement = inheritanceElements.get(inheritanceElements.size() - 2).getElementsByTag("li").first();
+            Elements inheritanceElements = inheritanceElement.getElementsByTag("a");
+            Element parentClassElement = inheritanceElements.get(inheritanceElements.size() - 1);
             parentClassName = parentClassElement.text();
+            if (parentClassName.startsWith(myCommand.getTopPackageName())) {
+                int packageIndex = parentClassName.lastIndexOf('.');
+                parentClassName = parentClassName.substring(packageIndex + 1);
+            } else {
+                if (parentClassName.contains(OBJECT_CLASS_PATH)){
+                    return null;
+                }
+            }
         } catch (IndexOutOfBoundsException | NullPointerException e) {
             logger.debug("No parent class in {}", className);
         }

@@ -24,8 +24,10 @@ public class TaskController {
     private ExecutorService pool = Executors.newFixedThreadPool(THREAD_POOL_COUNT);
     private ConcurrentLinkedQueue<CrawlerTask> queue = new ConcurrentLinkedQueue();
     private List<MyEntity> myEntities = new ArrayList<>();
+    private MyCommand myCommand;
 
     public TaskController(MyCommand myCommand) {
+        this.myCommand = myCommand;
         queue.add(new CrawlerTask(CrawlerType.PACKAGES, myCommand));
     }
 
@@ -37,12 +39,12 @@ public class TaskController {
             List<MyEntity> resultEntities = getResultFromFuture(future, task.getMyCommand().getUrl());
             if (CrawlerType.PACKAGES.equals(task.getCrawlerType())) {
                 for (MyEntity myEntity : resultEntities) {
-                    queue.add(new CrawlerTask(CrawlerType.CLASSES, new MyCommand(myEntity.getUrl(), myEntity.getPackageName())));
+                    queue.add(new CrawlerTask(CrawlerType.CLASSES, new MyCommand(myEntity.getUrl(), myCommand.getTopPackageName(), myEntity.getPackageName())));
                 }
             }
             if (CrawlerType.CLASSES.equals(task.getCrawlerType())) {
                 for (MyEntity myEntity : resultEntities){
-                    queue.add(new CrawlerTask(CrawlerType.DETAILS, new MyCommand(myEntity.getUrl(), myEntity.getPackageName())));
+                    queue.add(new CrawlerTask(CrawlerType.DETAILS, new MyCommand(myEntity.getUrl(), myCommand.getTopPackageName(), myEntity.getPackageName())));
                 }
             }
             if (CrawlerType.DETAILS.equals(task.getCrawlerType())){

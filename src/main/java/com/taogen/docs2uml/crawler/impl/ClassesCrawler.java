@@ -65,6 +65,7 @@ public class ClassesCrawler extends AbstractCrawler {
             MyEntity myEntity = new MyEntity();
             myEntity.setUrl(myCommand.getPrefixUrl() + url);
             myEntity.setClassName(className);
+            myEntity.setPackageName(myCommand.getPackageName());
             myEntities.add(myEntity);
         }
         logger.debug("myEntities size is {}", myEntities.size());

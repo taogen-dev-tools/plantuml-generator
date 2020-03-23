@@ -9,6 +9,7 @@ import lombok.Data;
 public class MyCommand {
     private String url;
     // TODO: update doc, pacakge -> pacakgeName
+    private String topPackageName;
     private String packageName;
     private Boolean subPackage;
 
@@ -19,13 +20,20 @@ public class MyCommand {
         this.url = url;
     }
 
-    public MyCommand(String url, String packageName) {
+    public MyCommand(String url, String topPackageName){
         this.url = url;
+        this.topPackageName = topPackageName;
+    }
+
+    public MyCommand(String url, String topPackageName, String packageName) {
+        this.url = url;
+        this.topPackageName = topPackageName;
         this.packageName = packageName;
     }
 
-    public MyCommand(String url, String packageName, Boolean subPackage) {
+    public MyCommand(String url, String topPackageName, String packageName, Boolean subPackage) {
         this.url = url;
+        this.topPackageName = topPackageName;
         this.packageName = packageName;
         this.subPackage = subPackage;
     }

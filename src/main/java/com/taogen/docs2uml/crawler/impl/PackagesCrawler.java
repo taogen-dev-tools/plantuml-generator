@@ -66,7 +66,7 @@ public class PackagesCrawler extends AbstractCrawler {
         List<MyEntity> myEntities = new ArrayList<>();
         for (Element element : packageElements) {
             String packageName = element.text();
-            if (packageName.startsWith(myCommand.getPackageName())) {
+            if (packageName.startsWith(myCommand.getTopPackageName())){
                 String packageHref = element.attr("href");
                 MyEntity myEntity = new MyEntity();
                 myEntity.setPackageName(packageName);
