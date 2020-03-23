@@ -90,7 +90,7 @@ public class ClassDetailsCrawler extends AbstractCrawler {
         classDetailsEntity.setPackageName(packageName);
         classDetailsEntity.setType(entityType);
         classDetailsEntity.setClassName(className);
-        classDetailsEntity.setParentClasses(parentClass);
+        classDetailsEntity.setParentClass(parentClass);
         classDetailsEntity.setParentInterfaces(parentInterfaces);
         classDetailsEntity.setIsAbstract(isAbstract);
         classDetailsEntity.setFields(fields);

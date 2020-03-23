@@ -17,7 +17,7 @@ public class MyEntity {
     private Boolean isAbstract;
     private String className;
     private String url;
-    private MyEntity parentClasses;
+    private MyEntity parentClass;
     private List<MyEntity> parentInterfaces;
     private List<MyField> fields;
     private List<MyMethod> methods;
