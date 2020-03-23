@@ -73,6 +73,7 @@ public class CommandHandler {
 
         this.myCommand.setUrl(url);
         this.myCommand.setPackageName(packageName);
+        this.myCommand.setTopPackageName(packageName);
         if (subPacakge != null) {
             this.myCommand.setSubPackage(Boolean.parseBoolean(subPacakge));
         }

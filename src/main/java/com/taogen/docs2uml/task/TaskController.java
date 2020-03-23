@@ -43,16 +43,17 @@ public class TaskController {
                 }
             }
             if (CrawlerType.CLASSES.equals(task.getCrawlerType())) {
-                for (MyEntity myEntity : resultEntities){
+                for (MyEntity myEntity : resultEntities) {
                     queue.add(new CrawlerTask(CrawlerType.DETAILS, new MyCommand(myEntity.getUrl(), myCommand.getTopPackageName(), myEntity.getPackageName())));
                 }
             }
-            if (CrawlerType.DETAILS.equals(task.getCrawlerType())){
+            if (CrawlerType.DETAILS.equals(task.getCrawlerType())) {
                 this.myEntities.addAll(resultEntities);
             }
         }
         this.pool.shutdown();
-        logger.debug("return entity size: {}", this.myEntities.size());
+        logger.info("Task end.");
+        logger.info("return entity size is {}", this.myEntities.size());
         return this.myEntities;
     }
 
