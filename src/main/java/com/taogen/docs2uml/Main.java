@@ -2,6 +2,7 @@ package com.taogen.docs2uml;
 
 import com.taogen.docs2uml.command.CommandHandler;
 import com.taogen.docs2uml.constant.CommandError;
+import com.taogen.docs2uml.entity.ErrorMessage;
 import com.taogen.docs2uml.entity.MyCommand;
 import com.taogen.docs2uml.entity.MyEntity;
 import com.taogen.docs2uml.exception.KnownException;
@@ -21,7 +22,9 @@ public class Main {
 
     public static void main(String[] args) {
         CommandHandler commandHandler = new CommandHandler(args);
-        if (! CommandError.SUCCESS_CODE.equals(commandHandler.check().getErrorCode())){
+        ErrorMessage errorMessage = commandHandler.check();
+        if (! CommandError.SUCCESS_CODE.equals(errorMessage.getErrorCode())){
+            logger.error(errorMessage.getErrorMessage());
             CommandHandler.showCommandUsage();
             return;
         }

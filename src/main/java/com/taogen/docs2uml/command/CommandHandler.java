@@ -38,7 +38,7 @@ public class CommandHandler {
      * TODO: Update docs. new method
      */
     public static void showCommandUsage() {
-        logger.info("Command Usage: java -jar docs2uml.jar -u example.com -p com.example -s false");
+        logger.info("Command Usage Example: java -jar docs2uml.jar -u https://example.com -p com.example");
     }
 
     // TODO: Recording. Lack design of algorithm.
