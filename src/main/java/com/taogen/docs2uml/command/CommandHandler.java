@@ -76,6 +76,9 @@ public class CommandHandler {
         this.myCommand.setTopPackageName(packageName);
         if (subPacakge != null) {
             this.myCommand.setSubPackage(Boolean.parseBoolean(subPacakge));
+        } else {
+            // set subPackage default value: false
+            this.myCommand.setSubPackage(false);
         }
         return CommandError.getErrorMessageByCode(com.taogen.docs2uml.constant.CommandError.SUCCESS_CODE);
     }
