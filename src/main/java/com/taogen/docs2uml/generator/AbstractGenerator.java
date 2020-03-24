@@ -6,10 +6,12 @@ import com.taogen.docs2uml.entity.MyEntity;
 import com.taogen.docs2uml.entity.MyField;
 import com.taogen.docs2uml.entity.MyMethod;
 import com.taogen.docs2uml.entity.MyParameter;
+import com.taogen.docs2uml.exception.GeneratorException;
 import com.taogen.docs2uml.vo.MyEntityVo;
 import com.taogen.docs2uml.vo.MyFieldVo;
 import com.taogen.docs2uml.vo.MyMethodVo;
 import freemarker.template.Configuration;
+import freemarker.template.Template;
 import freemarker.template.TemplateExceptionHandler;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -24,36 +26,36 @@ import java.util.List;
  */
 public abstract class AbstractGenerator implements Generator {
     protected static final Logger logger = LogManager.getLogger();
-    protected static final String GENERATE_DIRECTORY = "src/main/resources/generation";
-    protected static final String TEMPLATE_DIRECTORY = "src/main/resources/template";
-    protected static final Configuration configuration = new Configuration(Configuration.VERSION_2_3_30);
-
-    static {
-        ensureTemplateDirExists();
-        try {
-            configuration.setDirectoryForTemplateLoading(new File(TEMPLATE_DIRECTORY));
-        } catch (IOException e) {
-            logger.error("{}: {}", e.getClass().getName(), e.getMessage(), e);
-        }
-        configuration.setDefaultEncoding("UTF-8");
-        configuration.setLogTemplateExceptions(false);
-        configuration.setTemplateExceptionHandler(TemplateExceptionHandler.RETHROW_HANDLER);
-        configuration.setWrapUncheckedExceptions(true);
-        configuration.setFallbackOnNullLoopVariable(false);
-    }
+    protected static final String TEMPLATE_DIRECTORY_NAME = "template";
+    private static final Configuration configuration = new Configuration(Configuration.VERSION_2_3_30);
 
     protected static void ensureTemplateDirExists() {
-        ensureDirExists(TEMPLATE_DIRECTORY);
-    }
-
-    protected static void ensureGenerateDirExists() {
-        ensureDirExists(GENERATE_DIRECTORY);
+        ensureDirExists(TEMPLATE_DIRECTORY_NAME);
     }
 
     private static void ensureDirExists(String dirPath) {
         File directory = new File(dirPath);
         if (!directory.exists() && !directory.isDirectory()) {
             directory.mkdirs();
+        }
+    }
+
+    protected Configuration getConfiguration() {
+        configuration.setClassForTemplateLoading(this.getClass(), "/");
+        configuration.setDefaultEncoding("UTF-8");
+        configuration.setLogTemplateExceptions(false);
+        configuration.setTemplateExceptionHandler(TemplateExceptionHandler.RETHROW_HANDLER);
+        configuration.setWrapUncheckedExceptions(true);
+        configuration.setFallbackOnNullLoopVariable(false);
+        return configuration;
+    }
+
+    protected Template getTemplate(String templateFilename) {
+        try {
+            return getConfiguration().getTemplate(TEMPLATE_DIRECTORY_NAME + "/" + templateFilename);
+        } catch (IOException e) {
+            logger.error("{}: {}", e.getClass().getName(), e.getMessage(), e);
+            throw new GeneratorException(e.getMessage());
         }
     }
 
@@ -65,9 +67,9 @@ public abstract class AbstractGenerator implements Generator {
                 MyEntityVo myEntityVo = new MyEntityVo();
                 // entity
                 myEntityVo.setClassName(myEntity.getClassName());
-                if (myEntity.getIsAbstract()){
+                if (myEntity.getIsAbstract()) {
                     myEntityVo.setType(DecorativeKeyword.ABSTRACT);
-                }else {
+                } else {
                     myEntityVo.setType(myEntity.getType().toString().toLowerCase());
                 }
                 myEntityVo.setIsAbstract(getDecorativeGenerate(DecorativeKeyword.ABSTRACT, myEntity.getIsAbstract()));
