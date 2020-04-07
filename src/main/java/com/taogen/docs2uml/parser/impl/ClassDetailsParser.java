@@ -51,11 +51,14 @@ public class ClassDetailsParser extends AbstractParser {
             Element packageElement = headerElement.getElementsByClass("subTitle").last();
             Element classElement = headerElement.getElementsByClass("title").first();
             Element descriptionElement = document.getElementsByClass("description").first();
-            String[] classElementSplit = classElement.text().split(" ");
+            String classElementText = classElement.text();
             // class name
-            className = classElementSplit[1];
+            className = classElementText.substring(classElementText.indexOf(" ")+1);
+            if (className.contains(GENERIC_LEFT_MARK) && className.contains("extends")){
+                className = className.substring(0, className.indexOf("extends") - 1) + ">";
+            }
             // entity type
-            entityType = EntityType.valueOf(classElementSplit[0].toUpperCase());
+            entityType = EntityType.valueOf(classElementText.split(" ")[0].toUpperCase());
             // parent class
             parentClass.setClassName(getParentClassName(document, className, commandOption));
             // package name
