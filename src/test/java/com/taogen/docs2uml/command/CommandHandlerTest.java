@@ -1,6 +1,6 @@
 package com.taogen.docs2uml.command;
 
-import com.taogen.docs2uml.constant.CommandError;
+import com.taogen.docs2uml.commons.constant.CommandError;
 import org.junit.Test;
 
 import static org.junit.Assert.*;

@@ -1,19 +1,16 @@
 package com.taogen.docs2uml.crawler;
 
-import com.taogen.docs2uml.entity.MyCommand;
-import com.taogen.docs2uml.entity.MyEntity;
-
-import java.util.List;
+import com.taogen.docs2uml.commons.vo.HttpRequest;
 
 /**
  * @author Taogen
  */
-public interface Crawler {
+public interface Crawler<T> {
     /**
      * crawling information from Web page
      *
-     * @param myCommand crawling information
+     * @param httpRequest HTTP request information
      * @return crawling result
      */
-    List<MyEntity> crawl(MyCommand myCommand);
+    T crawl(HttpRequest httpRequest);
 }

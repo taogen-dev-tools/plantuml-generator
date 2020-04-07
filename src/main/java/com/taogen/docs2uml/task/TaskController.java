@@ -1,9 +1,10 @@
 package com.taogen.docs2uml.task;
 
-import com.taogen.docs2uml.constant.CrawlerType;
-import com.taogen.docs2uml.entity.MyCommand;
-import com.taogen.docs2uml.entity.MyEntity;
-import com.taogen.docs2uml.exception.TaskExecuteException;
+import com.taogen.docs2uml.commons.constant.CrawlerType;
+import com.taogen.docs2uml.commons.constant.ParserType;
+import com.taogen.docs2uml.commons.entity.CommandOption;
+import com.taogen.docs2uml.commons.entity.MyEntity;
+import com.taogen.docs2uml.commons.exception.TaskExecuteException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -24,11 +25,14 @@ public class TaskController {
     private ExecutorService pool = Executors.newFixedThreadPool(THREAD_POOL_COUNT);
     private ConcurrentLinkedQueue<CrawlerTask> queue = new ConcurrentLinkedQueue();
     private List<MyEntity> myEntities = new ArrayList<>();
-    private MyCommand myCommand;
+    private CommandOption commandOption;
 
-    public TaskController(MyCommand myCommand) {
-        this.myCommand = myCommand;
-        queue.add(new CrawlerTask(CrawlerType.PACKAGES, myCommand));
+    public TaskController(CommandOption commandOption) {
+        this.commandOption = commandOption;
+        if (commandOption.getSubPackage() == null) {
+            commandOption.setSubPackage(false);
+        }
+        queue.add(new CrawlerTask(CrawlerType.DOCUMENT, ParserType.PACKAGES, commandOption));
     }
 
     public List<MyEntity> execute() {
@@ -36,18 +40,18 @@ public class TaskController {
         while (!queue.isEmpty()) {
             CrawlerTask task = queue.poll();
             Future<List<MyEntity>> future = this.pool.submit(task);
-            List<MyEntity> resultEntities = getResultFromFuture(future, task.getMyCommand().getUrl());
-            if (CrawlerType.PACKAGES.equals(task.getCrawlerType())) {
+            List<MyEntity> resultEntities = getResultFromFuture(future, task.getCommandOption().getUrl());
+            if (ParserType.PACKAGES.equals(task.getParserType())) {
                 for (MyEntity myEntity : resultEntities) {
-                    queue.add(new CrawlerTask(CrawlerType.CLASSES, new MyCommand(myEntity.getUrl(), myCommand.getTopPackageName(), myEntity.getPackageName())));
+                    queue.add(new CrawlerTask(CrawlerType.DOCUMENT, ParserType.CLASSES, new CommandOption(myEntity.getUrl(), commandOption.getTopPackageName(), myEntity.getPackageName())));
                 }
             }
-            if (CrawlerType.CLASSES.equals(task.getCrawlerType())) {
+            if (ParserType.CLASSES.equals(task.getParserType())) {
                 for (MyEntity myEntity : resultEntities) {
-                    queue.add(new CrawlerTask(CrawlerType.DETAILS, new MyCommand(myEntity.getUrl(), myCommand.getTopPackageName(), myEntity.getPackageName())));
+                    queue.add(new CrawlerTask(CrawlerType.DOCUMENT, ParserType.DETAILS, new CommandOption(myEntity.getUrl(), commandOption.getTopPackageName(), myEntity.getPackageName())));
                 }
             }
-            if (CrawlerType.DETAILS.equals(task.getCrawlerType())) {
+            if (ParserType.DETAILS.equals(task.getParserType())) {
                 this.myEntities.addAll(resultEntities);
             }
         }

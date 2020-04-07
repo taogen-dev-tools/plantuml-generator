@@ -1,5 +1,6 @@
 package com.taogen.docs2uml.crawler;
 
+import com.taogen.docs2uml.commons.constant.RequestMethod;
 import lombok.Data;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -14,13 +15,17 @@ import java.io.IOException;
  */
 @Data
 public abstract class AbstractCrawler implements Crawler {
-    protected static final String NOT_FOUND_ELEMENTS_ERROR = "Not found elements form Web page. Please check your URL: %s";
-    protected static final String FAIL_TO_CONNECT_URL = "Fail to connect the URL: %s";
-    protected static final String GENERIC_LEFT_MARK = "<";
-    protected static final String GENERIC_RIGHT_MARK = ">";
     private static final Logger logger = LogManager.getLogger();
 
-    protected static Document getDocument(String url) {
+    protected static Connection.Method getJsoupConnectionMethod(RequestMethod requestMethod) {
+        Connection.Method method = Connection.Method.GET;
+        if (RequestMethod.POST.equals(requestMethod)) {
+            method = Connection.Method.POST;
+        }
+        return method;
+    }
+
+    protected Document getDocument(String url) {
         Document document = null;
         Connection connection = Jsoup.connect(url);
         try {

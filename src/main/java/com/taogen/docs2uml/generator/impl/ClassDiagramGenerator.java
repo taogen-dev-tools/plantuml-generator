@@ -1,9 +1,9 @@
 package com.taogen.docs2uml.generator.impl;
 
-import com.taogen.docs2uml.entity.MyEntity;
-import com.taogen.docs2uml.exception.GeneratorException;
+import com.taogen.docs2uml.commons.entity.MyEntity;
+import com.taogen.docs2uml.commons.exception.GeneratorException;
 import com.taogen.docs2uml.generator.AbstractGenerator;
-import com.taogen.docs2uml.vo.MyEntityVo;
+import com.taogen.docs2uml.commons.vo.MyEntityVo;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
 import org.apache.logging.log4j.LogManager;
@@ -32,7 +32,8 @@ public class ClassDiagramGenerator extends AbstractGenerator {
         String templateFilename = "classDiagramTemplate.ftl";
         String generateFilename = "classDiagram.txt";
         generateTemplate(templateFilename, generateFilename, params);
-        logger.info("PlantUML text have generated to {}", Paths.get(".").toAbsolutePath().normalize().toString() + File.separator + generateFilename);
+        String generateFilePath = Paths.get(".").toAbsolutePath().normalize().toString() + File.separator + generateFilename;
+        logger.info("PlantUML text have generated to {}", generateFilePath);
         logger.info("End generating.");
         return true;
     }

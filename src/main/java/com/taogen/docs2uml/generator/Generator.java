@@ -1,7 +1,7 @@
 package com.taogen.docs2uml.generator;
 
-import com.taogen.docs2uml.entity.MyEntity;
-import com.taogen.docs2uml.exception.GeneratorException;
+import com.taogen.docs2uml.commons.entity.MyEntity;
+import com.taogen.docs2uml.commons.exception.GeneratorException;
 
 import java.util.List;
 
@@ -15,5 +15,5 @@ public interface Generator {
      * @return
      * @throws GeneratorException
      */
-    Boolean generate(List<MyEntity> myEntities) throws GeneratorException;
+    Boolean generate(List<MyEntity> myEntities);
 }

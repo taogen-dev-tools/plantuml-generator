@@ -1,11 +1,11 @@
 package com.taogen.docs2uml;
 
 import com.taogen.docs2uml.command.CommandHandler;
-import com.taogen.docs2uml.constant.CommandError;
-import com.taogen.docs2uml.entity.ErrorMessage;
-import com.taogen.docs2uml.entity.MyCommand;
-import com.taogen.docs2uml.entity.MyEntity;
-import com.taogen.docs2uml.exception.KnownException;
+import com.taogen.docs2uml.commons.constant.CommandError;
+import com.taogen.docs2uml.commons.entity.CommandOption;
+import com.taogen.docs2uml.commons.entity.ErrorMessage;
+import com.taogen.docs2uml.commons.entity.MyEntity;
+import com.taogen.docs2uml.commons.exception.KnownException;
 import com.taogen.docs2uml.generator.Generator;
 import com.taogen.docs2uml.generator.impl.ClassDiagramGenerator;
 import com.taogen.docs2uml.task.TaskController;
@@ -23,26 +23,23 @@ public class Main {
     public static void main(String[] args) {
         CommandHandler commandHandler = new CommandHandler(args);
         ErrorMessage errorMessage = commandHandler.check();
-        if (! CommandError.SUCCESS_CODE.equals(errorMessage.getErrorCode())){
+        if (!CommandError.SUCCESS_CODE.equals(errorMessage.getErrorCode())) {
             logger.error(errorMessage.getErrorMessage());
             CommandHandler.showCommandUsage();
             return;
         }
-        MyCommand myCommand = commandHandler.getMyCommand();
+        CommandOption commandOption = commandHandler.getCommandOption();
         try {
             long beginTime = System.currentTimeMillis();
-            TaskController taskController = new TaskController(myCommand);
+            TaskController taskController = new TaskController(commandOption);
             List<MyEntity> myEntityList = taskController.execute();
             Generator generator = new ClassDiagramGenerator();
             generator.generate(myEntityList);
             logger.info("Elapsed time: {}ms", (System.currentTimeMillis() - beginTime));
-        }catch (Exception e){
-            if (e instanceof KnownException){
-                logger.error("{}: {}", e.getClass().getName(), e.getMessage(), e);
-            }else{
-                logger.error("System internal error!", e);
-            }
+        } catch (KnownException e) {
+            logger.error("{}: {}", e.getClass().getName(), e.getMessage(), e);
+        } catch (Exception e) {
+            logger.error("System internal error!", e);
         }
     }
-
 }

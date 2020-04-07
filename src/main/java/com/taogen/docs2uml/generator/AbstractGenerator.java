@@ -1,15 +1,15 @@
 package com.taogen.docs2uml.generator;
 
-import com.taogen.docs2uml.constant.DecorativeKeyword;
-import com.taogen.docs2uml.constant.Visibility;
-import com.taogen.docs2uml.entity.MyEntity;
-import com.taogen.docs2uml.entity.MyField;
-import com.taogen.docs2uml.entity.MyMethod;
-import com.taogen.docs2uml.entity.MyParameter;
-import com.taogen.docs2uml.exception.GeneratorException;
-import com.taogen.docs2uml.vo.MyEntityVo;
-import com.taogen.docs2uml.vo.MyFieldVo;
-import com.taogen.docs2uml.vo.MyMethodVo;
+import com.taogen.docs2uml.commons.constant.DecorativeKeyword;
+import com.taogen.docs2uml.commons.constant.Visibility;
+import com.taogen.docs2uml.commons.entity.MyEntity;
+import com.taogen.docs2uml.commons.entity.MyField;
+import com.taogen.docs2uml.commons.entity.MyMethod;
+import com.taogen.docs2uml.commons.entity.MyParameter;
+import com.taogen.docs2uml.commons.exception.GeneratorException;
+import com.taogen.docs2uml.commons.vo.MyEntityVo;
+import com.taogen.docs2uml.commons.vo.MyFieldVo;
+import com.taogen.docs2uml.commons.vo.MyMethodVo;
 import freemarker.template.Configuration;
 import freemarker.template.Template;
 import freemarker.template.TemplateExceptionHandler;
@@ -67,70 +67,82 @@ public abstract class AbstractGenerator implements Generator {
                 MyEntityVo myEntityVo = new MyEntityVo();
                 // entity
                 myEntityVo.setClassName(myEntity.getClassName());
-                if (myEntity.getIsAbstract()) {
+                if (myEntity.getIsAbstract() != null && myEntity.getIsAbstract()) {
                     myEntityVo.setType(DecorativeKeyword.ABSTRACT);
                 } else {
                     myEntityVo.setType(myEntity.getType().toString().toLowerCase());
                 }
                 myEntityVo.setIsAbstract(getDecorativeGenerate(DecorativeKeyword.ABSTRACT, myEntity.getIsAbstract()));
                 // entity fields
-                List<MyField> myFields = myEntity.getFields();
-                if (myFields != null) {
-                    List<MyFieldVo> myFieldVos = new ArrayList<>(myFields.size());
-                    for (MyField myField : myFields) {
-                        MyFieldVo fieldVo = new MyFieldVo();
-                        fieldVo.setIsFinal(getDecorativeGenerate(DecorativeKeyword.FINAL, myField.getIsFinal()));
-                        fieldVo.setIsStatic(getDecorativeGenerate(DecorativeKeyword.STATIC, myField.getIsStatic()));
-                        fieldVo.setVisibility(getGenerateVisibility(myField.getVisibility()));
-                        fieldVo.setType(myField.getType());
-                        fieldVo.setName(myField.getName());
-                        myFieldVos.add(fieldVo);
-                    }
-                    myEntityVo.setFields(myFieldVos);
-                }
+                myEntityVo.setFields(getFieldVosByFields(myEntity.getFields()));
                 // entity methods
-                List<MyMethod> myMethods = myEntity.getMethods();
-                if (myMethods != null) {
-                    List<MyMethodVo> myMethodVos = new ArrayList<>(myMethods.size());
-                    for (MyMethod myMethod : myMethods) {
-                        MyMethodVo methodVo = new MyMethodVo();
-                        methodVo.setVisibility(getGenerateVisibility(myMethod.getVisibility()));
-                        methodVo.setIsAbstract(getDecorativeGenerate(DecorativeKeyword.ABSTRACT, myMethod.getIsAbstract()));
-                        methodVo.setIsStatic(getDecorativeGenerate(DecorativeKeyword.STATIC, myMethod.getIsStatic()));
-                        methodVo.setReturnType(myMethod.getReturnType());
-                        methodVo.setName(myMethod.getName());
-                        List<MyParameter> myParameters = myMethod.getParams();
-                        if (myParameters != null) {
-                            StringBuilder params = new StringBuilder();
-                            for (int i = 0; i < myParameters.size(); i++) {
-                                params.append(myParameters.get(i).getType()).append(" ").append(myParameters.get(i).getName());
-                                if (i != myParameters.size() - 1) {
-                                    params.append(", ");
-                                }
-                            }
-                            methodVo.setParams(params.toString());
-                        }
-                        myMethodVos.add(methodVo);
-                    }
-                    myEntityVo.setMethods(myMethodVos);
-                }
+                myEntityVo.setMethods(getMethodVosByMethods(myEntity.getMethods()));
                 // entity parent class
                 if (myEntity.getParentClass() != null) {
                     myEntityVo.setParentClass(myEntity.getParentClass().getClassName());
                 }
                 // entity parent interfaces
-                List<MyEntity> parentInterfaces = myEntity.getParentInterfaces();
-                if (parentInterfaces != null) {
-                    List<String> parentInterfaceNames = new ArrayList<>(parentInterfaces.size());
-                    for (MyEntity myInterface : parentInterfaces) {
-                        parentInterfaceNames.add(myInterface.getClassName());
-                    }
-                    myEntityVo.setParentInterfaces(parentInterfaceNames);
-                }
+                myEntityVo.setParentInterfaces(getParentInterfaces(myEntity.getParentInterfaces()));
                 myEntityVos.add(myEntityVo);
             }
         }
         return myEntityVos;
+    }
+
+    private List<MyFieldVo> getFieldVosByFields(List<MyField> myFields) {
+        if (myFields == null) {
+            return new ArrayList<>();
+        }
+        List<MyFieldVo> myFieldVos = new ArrayList<>(myFields.size());
+        for (MyField myField : myFields) {
+            MyFieldVo fieldVo = new MyFieldVo();
+            fieldVo.setIsFinal(getDecorativeGenerate(DecorativeKeyword.FINAL, myField.getIsFinal()));
+            fieldVo.setIsStatic(getDecorativeGenerate(DecorativeKeyword.STATIC, myField.getIsStatic()));
+            fieldVo.setVisibility(getGenerateVisibility(myField.getVisibility()));
+            fieldVo.setType(myField.getType());
+            fieldVo.setName(myField.getName());
+            myFieldVos.add(fieldVo);
+        }
+        return myFieldVos;
+    }
+
+    private List<MyMethodVo> getMethodVosByMethods(List<MyMethod> myMethods) {
+        if (myMethods == null) {
+            return new ArrayList<>();
+        }
+        List<MyMethodVo> myMethodVos = new ArrayList<>(myMethods.size());
+        for (MyMethod myMethod : myMethods) {
+            MyMethodVo methodVo = new MyMethodVo();
+            methodVo.setVisibility(getGenerateVisibility(myMethod.getVisibility()));
+            methodVo.setIsAbstract(getDecorativeGenerate(DecorativeKeyword.ABSTRACT, myMethod.getIsAbstract()));
+            methodVo.setIsStatic(getDecorativeGenerate(DecorativeKeyword.STATIC, myMethod.getIsStatic()));
+            methodVo.setReturnType(myMethod.getReturnType());
+            methodVo.setName(myMethod.getName());
+            List<MyParameter> myParameters = myMethod.getParams();
+            if (myParameters != null) {
+                StringBuilder params = new StringBuilder();
+                for (int i = 0; i < myParameters.size(); i++) {
+                    params.append(myParameters.get(i).getType()).append(" ").append(myParameters.get(i).getName());
+                    if (i != myParameters.size() - 1) {
+                        params.append(", ");
+                    }
+                }
+                methodVo.setParams(params.toString());
+            }
+            myMethodVos.add(methodVo);
+        }
+        return myMethodVos;
+    }
+
+    private List<String> getParentInterfaces(List<MyEntity> parentInterfaces) {
+        if (parentInterfaces == null) {
+            return new ArrayList<>();
+        }
+        List<String> parentInterfaceNames = new ArrayList<>(parentInterfaces.size());
+        for (MyEntity myInterface : parentInterfaces) {
+            parentInterfaceNames.add(myInterface.getClassName());
+        }
+        return parentInterfaceNames;
     }
 
     private String getDecorativeGenerate(String keyword, boolean isExists) {

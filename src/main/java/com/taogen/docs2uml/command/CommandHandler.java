@@ -1,8 +1,8 @@
 package com.taogen.docs2uml.command;
 
-import com.taogen.docs2uml.constant.CommandError;
-import com.taogen.docs2uml.entity.ErrorMessage;
-import com.taogen.docs2uml.entity.MyCommand;
+import com.taogen.docs2uml.commons.constant.CommandError;
+import com.taogen.docs2uml.commons.entity.ErrorMessage;
+import com.taogen.docs2uml.commons.entity.CommandOption;
 import lombok.Data;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -25,7 +25,7 @@ public class CommandHandler {
 
     // TODO: update docs. command -> argutments
     private String[] arguments;
-    private MyCommand myCommand = new MyCommand();
+    private CommandOption commandOption = new CommandOption();
 
     public CommandHandler() {
     }
@@ -44,7 +44,7 @@ public class CommandHandler {
     // TODO: Recording. Lack design of algorithm.
     public ErrorMessage check() {
         if (arguments == null) {
-            return CommandError.getErrorMessageByCode(com.taogen.docs2uml.constant.CommandError.ERROR_CODE_MISS_PARAM);
+            return CommandError.getErrorMessageByCode(com.taogen.docs2uml.commons.constant.CommandError.ERROR_CODE_MISS_PARAM);
         }
         Map<String, String> argumentsMap = new HashMap<>();
         for (int i = 0; i < arguments.length; i = i + 2) {
@@ -71,16 +71,16 @@ public class CommandHandler {
             return CommandError.getErrorMessageByCode(CommandError.ERROR_CODE_PARAM_VALUE_FORMAT_ERROR);
         }
 
-        this.myCommand.setUrl(url);
-        this.myCommand.setPackageName(packageName);
-        this.myCommand.setTopPackageName(packageName);
+        this.commandOption.setUrl(url);
+        this.commandOption.setPackageName(packageName);
+        this.commandOption.setTopPackageName(packageName);
         if (subPacakge != null) {
-            this.myCommand.setSubPackage(Boolean.parseBoolean(subPacakge));
+            this.commandOption.setSubPackage(Boolean.parseBoolean(subPacakge));
         } else {
             // set subPackage default value: false
-            this.myCommand.setSubPackage(false);
+            this.commandOption.setSubPackage(false);
         }
-        return CommandError.getErrorMessageByCode(com.taogen.docs2uml.constant.CommandError.SUCCESS_CODE);
+        return CommandError.getErrorMessageByCode(com.taogen.docs2uml.commons.constant.CommandError.SUCCESS_CODE);
     }
 
     private boolean isLegalSubPackage(String subPacakge) {
