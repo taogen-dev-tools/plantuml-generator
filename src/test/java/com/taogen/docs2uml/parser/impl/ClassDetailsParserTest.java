@@ -22,19 +22,27 @@ import static org.junit.Assert.*;
 public class ClassDetailsParserTest {
 
     private static final Logger logger = LogManager.getLogger();
-    private static Document document;
     private static Parser parser;
 
     @BeforeClass
-    public static void init() throws IOException {
+    public static void init() {
         parser = ParserFactory.create(ParserType.DETAILS);
-        File file = new File(PackagesParserTest.class.getClassLoader().getResource("html/java-api-java-io-byteArrayInputStream.html").getFile());
-        document = Jsoup.parse(file, "UTF-8");
     }
+
     @Test
-    public void parse() {
+    public void parse() throws IOException {
         String packageName = "java.io";
-        List<MyEntity> myEntities = parser.parse(document, new CommandOption(null, packageName, packageName));
+        List<MyEntity> myEntities = parser.parse(getDocument("html/java-api-java-io-byteArrayInputStream.html"),
+                new CommandOption(null, packageName, packageName));
+        checkMyEntity(myEntities, packageName);
+    }
+
+    private Document getDocument(String filePath) throws IOException {
+        File file = new File(PackagesParserTest.class.getClassLoader().getResource(filePath).getFile());
+        return Jsoup.parse(file, "UTF-8");
+    }
+
+    private void checkMyEntity(List<MyEntity> myEntities, String packageName) {
         assertNotNull(myEntities);
         assertEquals(1, myEntities.size());
         assertNotNull(myEntities.get(0));

@@ -131,9 +131,8 @@ public class ClassDetailsParser extends AbstractParser {
             }
         }
         if (parentInterfacesText != null) {
-            String[] parentInterfaces = parentInterfacesText.split(",");
+            List<String> parentInterfaces = getClassListFromContainsGenericString(parentInterfacesText);
             for (String interfaceStr : parentInterfaces) {
-                interfaceStr = interfaceStr.replaceAll("<[a-zA-Z]+>", "");
                 MyEntity myEntity = new MyEntity();
                 myEntity.setClassName(interfaceStr);
                 superInterfaces.add(myEntity);
@@ -238,7 +237,7 @@ public class ClassDetailsParser extends AbstractParser {
         if (!parametersText.contains(GENERIC_LEFT_MARK)) {
             parameterEntries = Arrays.asList(parametersText.split(","));
         } else {
-            parameterEntries = handleDifficultParameterList(parametersText);
+            parameterEntries = getClassListFromContainsGenericString(parametersText);
         }
         for (String entry : parameterEntries) {
             int splitIndex = entry.lastIndexOf(' ');
@@ -259,7 +258,7 @@ public class ClassDetailsParser extends AbstractParser {
      * - mapEquivalents(List<Locale.LanguageRange> priorityList, Map<String,List<String>> map)
      * @return
      */
-    private List<String> handleDifficultParameterList(String parametersText) {
+    private List<String> getClassListFromContainsGenericString(String parametersText) {
         List<String> parameterEntries = new ArrayList<>();
         int indexBegin = 0;
         int indexSplit = parametersText.indexOf(',', indexBegin);

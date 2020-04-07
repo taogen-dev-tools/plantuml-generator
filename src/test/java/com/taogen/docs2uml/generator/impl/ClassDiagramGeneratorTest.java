@@ -30,4 +30,18 @@ public class ClassDiagramGeneratorTest {
         List<MyEntity> myEntities = parser.parse(document, commandOption);
         assertTrue(classDiagramGenerator.generate(myEntities));
     }
+
+    @Test
+    public void parseTestSuperInterfacesHaveGeneric() throws IOException {
+        Parser parser = ParserFactory.create(ParserType.DETAILS);
+        String packageName = "java.util";
+        List<MyEntity> myEntities = parser.parse(getDocument("html/java-api-java-util-NavigableMap.html"),
+                new CommandOption(null, packageName, packageName));
+        assertTrue(classDiagramGenerator.generate(myEntities));
+    }
+
+    private Document getDocument(String filePath) throws IOException {
+        File file = new File(PackagesParserTest.class.getClassLoader().getResource(filePath).getFile());
+        return Jsoup.parse(file, "UTF-8");
+    }
 }
