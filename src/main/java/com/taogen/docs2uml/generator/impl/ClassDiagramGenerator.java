@@ -38,6 +38,13 @@ public class ClassDiagramGenerator extends AbstractGenerator {
         return true;
     }
 
+    private Map<String, Object> getParameters(List<MyEntity> myEntities) {
+        Map<String, Object> root = new HashMap<>();
+        List<MyEntityVo> myEntityVos = convertEntityToVo(myEntities);
+        root.put("entities", myEntityVos);
+        return root;
+    }
+
     private void generateTemplate(String templateFilename, String generateFilename, Map<String, Object> params) {
         try (
                 Writer fileWriter = new FileWriter(new File(generateFilename))
@@ -49,12 +56,5 @@ public class ClassDiagramGenerator extends AbstractGenerator {
             logger.error("{}: {}", e.getClass().getName(), e.getMessage(), e);
             throw new GeneratorException(e.getMessage());
         }
-    }
-
-    private Map<String, Object> getParameters(List<MyEntity> myEntities) {
-        Map<String, Object> root = new HashMap<>();
-        List<MyEntityVo> myEntityVos = convertEntityToVo(myEntities);
-        root.put("entities", myEntityVos);
-        return root;
     }
 }

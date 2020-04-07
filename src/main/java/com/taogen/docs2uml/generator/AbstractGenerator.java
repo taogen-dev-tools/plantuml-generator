@@ -7,6 +7,7 @@ import com.taogen.docs2uml.commons.entity.MyField;
 import com.taogen.docs2uml.commons.entity.MyMethod;
 import com.taogen.docs2uml.commons.entity.MyParameter;
 import com.taogen.docs2uml.commons.exception.GeneratorException;
+import com.taogen.docs2uml.commons.util.GenericUtil;
 import com.taogen.docs2uml.commons.vo.MyEntityVo;
 import com.taogen.docs2uml.commons.vo.MyFieldVo;
 import com.taogen.docs2uml.commons.vo.MyMethodVo;
@@ -67,6 +68,7 @@ public abstract class AbstractGenerator implements Generator {
                 MyEntityVo myEntityVo = new MyEntityVo();
                 // entity
                 myEntityVo.setClassName(myEntity.getClassName());
+                myEntityVo.setClassNameWithoutGeneric(GenericUtil.removeGeneric(myEntity.getClassName()));
                 if (myEntity.getIsAbstract() != null && myEntity.getIsAbstract()) {
                     myEntityVo.setType(DecorativeKeyword.ABSTRACT);
                 } else {
@@ -79,7 +81,7 @@ public abstract class AbstractGenerator implements Generator {
                 myEntityVo.setMethods(getMethodVosByMethods(myEntity.getMethods()));
                 // entity parent class
                 if (myEntity.getParentClass() != null) {
-                    myEntityVo.setParentClass(myEntity.getParentClass().getClassName());
+                    myEntityVo.setParentClass(GenericUtil.removeGeneric(myEntity.getParentClass().getClassName()));
                 }
                 // entity parent interfaces
                 myEntityVo.setParentInterfaces(getParentInterfaces(myEntity.getParentInterfaces()));
@@ -140,7 +142,7 @@ public abstract class AbstractGenerator implements Generator {
         }
         List<String> parentInterfaceNames = new ArrayList<>(parentInterfaces.size());
         for (MyEntity myInterface : parentInterfaces) {
-            parentInterfaceNames.add(myInterface.getClassName());
+            parentInterfaceNames.add(GenericUtil.removeGeneric(myInterface.getClassName()));
         }
         return parentInterfaceNames;
     }

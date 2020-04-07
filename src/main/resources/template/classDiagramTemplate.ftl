@@ -20,14 +20,14 @@ ${myEntity.type} ${myEntity.className} {
 
 'relationship
 <#if myEntity.parentClass??>
-${myEntity.parentClass} <|-- ${myEntity.className}
+${myEntity.parentClass} <|-- ${myEntity.classNameWithoutGeneric}
 </#if>
 <#if myEntity.parentInterfaces??>
 <#list myEntity.parentInterfaces as interfaceName>
 <#if myEntity.type == "interface">
-${interfaceName} <|-- ${myEntity.className}
+${interfaceName} <|-- ${myEntity.classNameWithoutGeneric}
 <#else>
-${interfaceName} <|.. ${myEntity.className}
+${interfaceName} <|.. ${myEntity.classNameWithoutGeneric}
 </#if>
 </#list>
 </#if>
