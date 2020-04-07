@@ -53,9 +53,9 @@ public class ClassDetailsParser extends AbstractParser {
             Element descriptionElement = document.getElementsByClass("description").first();
             String classElementText = classElement.text();
             // class name
-            className = classElementText.substring(classElementText.indexOf(" ")+1);
+            className = classElementText.substring(classElementText.indexOf(' ')+1);
             if (className.contains(GENERIC_LEFT_MARK) && className.contains("extends")){
-                className = className.substring(0, className.indexOf("extends") - 1) + ">";
+                className = className.substring(0, className.indexOf("extends") - 1) + GENERIC_RIGHT_MARK;
             }
             // entity type
             entityType = EntityType.valueOf(classElementText.split(" ")[0].toUpperCase());

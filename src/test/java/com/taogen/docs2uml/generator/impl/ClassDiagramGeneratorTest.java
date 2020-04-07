@@ -6,7 +6,6 @@ import com.taogen.docs2uml.commons.entity.MyEntity;
 import com.taogen.docs2uml.parser.Parser;
 import com.taogen.docs2uml.parser.ParserFactory;
 import com.taogen.docs2uml.parser.impl.PackagesParserTest;
-import com.taogen.docs2uml.task.TaskController;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.junit.Test;
@@ -15,7 +14,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertTrue;
 
 public class ClassDiagramGeneratorTest {
 
