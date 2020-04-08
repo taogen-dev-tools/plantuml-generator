@@ -1,5 +1,6 @@
 package com.taogen.docs2uml.generator.impl;
 
+import com.taogen.docs2uml.commons.entity.CommandOption;
 import com.taogen.docs2uml.commons.entity.MyEntity;
 import com.taogen.docs2uml.commons.exception.GeneratorException;
 import com.taogen.docs2uml.generator.AbstractGenerator;
@@ -26,9 +27,9 @@ public class ClassDiagramGenerator extends AbstractGenerator {
     private static final Logger logger = LogManager.getLogger();
 
     @Override
-    public Boolean generate(List<MyEntity> myEntities) {
+    public Boolean generate(List<MyEntity> myEntities, CommandOption commandOption) {
         logger.info("Start generating...");
-        Map<String, Object> params = getParameters(myEntities);
+        Map<String, Object> params = getParameters(myEntities, commandOption);
         String templateFilename = "classDiagramTemplate.ftl";
         String generateFilename = "classDiagram.txt";
         generateTemplate(templateFilename, generateFilename, params);
@@ -38,10 +39,11 @@ public class ClassDiagramGenerator extends AbstractGenerator {
         return true;
     }
 
-    private Map<String, Object> getParameters(List<MyEntity> myEntities) {
+    private Map<String, Object> getParameters(List<MyEntity> myEntities, CommandOption commandOption) {
         Map<String, Object> root = new HashMap<>();
         List<MyEntityVo> myEntityVos = convertEntityToVo(myEntities);
         root.put("entities", myEntityVos);
+        root.put("commandOptions", commandOption);
         return root;
     }
 

@@ -4,6 +4,7 @@
 
 'entity
 ${myEntity.type} ${myEntity.className} {
+<#if commandOptions.members ?? && commandOptions.members == true>
     'fields
     <#if myEntity.fields??>
     <#list myEntity.fields as field>
@@ -16,6 +17,7 @@ ${myEntity.type} ${myEntity.className} {
     ${method.visibility!""} ${method.isStatic!""} ${method.isAbstract!""} ${method.returnType!""} ${method.name}(${method.params!""})
     </#list>
     </#if>
+</#if>
 }
 
 'relationship

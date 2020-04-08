@@ -1,7 +1,7 @@
 package com.taogen.docs2uml.generator;
 
+import com.taogen.docs2uml.commons.entity.CommandOption;
 import com.taogen.docs2uml.commons.entity.MyEntity;
-import com.taogen.docs2uml.commons.exception.GeneratorException;
 
 import java.util.List;
 
@@ -12,8 +12,8 @@ public interface Generator {
     /**
      * generate PlantUML text
      * @param myEntities
+     * @param commandOption
      * @return
-     * @throws GeneratorException
      */
-    Boolean generate(List<MyEntity> myEntities);
+    Boolean generate(List<MyEntity> myEntities, CommandOption commandOption);
 }

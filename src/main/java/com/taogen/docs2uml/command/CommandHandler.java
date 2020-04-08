@@ -1,8 +1,8 @@
 package com.taogen.docs2uml.command;
 
 import com.taogen.docs2uml.commons.constant.CommandError;
-import com.taogen.docs2uml.commons.entity.ErrorMessage;
 import com.taogen.docs2uml.commons.entity.CommandOption;
+import com.taogen.docs2uml.commons.entity.ErrorMessage;
 import lombok.Data;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -21,6 +21,9 @@ public class CommandHandler {
     private static final String PACKAGE_FULL_OPTION = "--package";
     private static final String SUB_PACKAGE_OPTION = "-s";
     private static final String SUB_PACKAGE_FULL_OPTION = "--subpackage";
+    private static final String MEMBERS_OPTION = "-m";
+    private static final String MEMBERS_FULL_OPTION = "--members";
+
     private static final Logger logger = LogManager.getLogger();
 
     // TODO: update docs. command -> argutments
@@ -60,6 +63,8 @@ public class CommandHandler {
         packageName = packageName != null ? packageName : argumentsMap.get(PACKAGE_FULL_OPTION);
         String subPacakge = argumentsMap.get(SUB_PACKAGE_OPTION);
         subPacakge = subPacakge != null ? subPacakge : argumentsMap.get(SUB_PACKAGE_FULL_OPTION);
+        String members = argumentsMap.get(MEMBERS_OPTION);
+        members = members != null ? members : argumentsMap.get(MEMBERS_FULL_OPTION);
 
         if (url == null || packageName == null) {
             return CommandError.getErrorMessageByCode(CommandError.ERROR_CODE_MISS_PARAM);
@@ -67,7 +72,10 @@ public class CommandHandler {
         if (!isLegalUrl(url)) {
             return CommandError.getErrorMessageByCode(CommandError.ERROR_CODE_PARAM_VALUE_FORMAT_ERROR);
         }
-        if (subPacakge != null && !isLegalSubPackage(subPacakge)) {
+        if (subPacakge != null && !isBooleanValue(subPacakge)) {
+            return CommandError.getErrorMessageByCode(CommandError.ERROR_CODE_PARAM_VALUE_FORMAT_ERROR);
+        }
+        if (members != null && !isBooleanValue(members)) {
             return CommandError.getErrorMessageByCode(CommandError.ERROR_CODE_PARAM_VALUE_FORMAT_ERROR);
         }
 
@@ -80,10 +88,16 @@ public class CommandHandler {
             // set subPackage default value: false
             this.commandOption.setSubPackage(false);
         }
+        if (members != null) {
+            this.commandOption.setMembers(Boolean.parseBoolean(members));
+        } else {
+            // default value
+            this.commandOption.setMembers(true);
+        }
         return CommandError.getErrorMessageByCode(com.taogen.docs2uml.commons.constant.CommandError.SUCCESS_CODE);
     }
 
-    private boolean isLegalSubPackage(String subPacakge) {
+    private boolean isBooleanValue(String subPacakge) {
         return "true".equals(subPacakge) || "false".equals(subPacakge);
     }
 

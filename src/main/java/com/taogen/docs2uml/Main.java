@@ -34,7 +34,7 @@ public class Main {
             TaskController taskController = new TaskController(commandOption);
             List<MyEntity> myEntityList = taskController.execute();
             Generator generator = new ClassDiagramGenerator();
-            generator.generate(myEntityList);
+            generator.generate(myEntityList, commandOption);
             logger.info("Elapsed time: {}ms", (System.currentTimeMillis() - beginTime));
         } catch (KnownException e) {
             logger.error("{}: {}", e.getClass().getName(), e.getMessage(), e);
