@@ -8,6 +8,8 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @author Taogen
@@ -24,6 +26,7 @@ public class DocumentCrawler extends AbstractCrawler {
             throw new FailConnectException(e.getMessage());
         }
         if (httpRequest.getHeaders() != null) {
+            connection.headers(getBasicHeaders());
             connection.headers(httpRequest.getHeaders());
         }
         connection.method(getJsoupConnectionMethod(httpRequest.getRequestMethod()));
@@ -33,5 +36,15 @@ public class DocumentCrawler extends AbstractCrawler {
             throw new FailConnectException(e.getMessage());
         }
         return document;
+    }
+
+    protected Map<String, String> getBasicHeaders()
+    {
+        Map<String, String> headers = new HashMap<>();
+        headers.put("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8");
+        headers.put("Accept-Encoding", "gzip, deflate, br");
+        headers.put("Accept-Language", "en-US,en;q=0.5");
+        headers.put("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:68.0) Gecko/20100101 Firefox/68.0");
+        return headers;
     }
 }
