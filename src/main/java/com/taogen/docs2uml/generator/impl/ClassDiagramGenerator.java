@@ -31,12 +31,23 @@ public class ClassDiagramGenerator extends AbstractGenerator {
         logger.info("Start generating...");
         Map<String, Object> params = getParameters(myEntities, commandOption);
         String templateFilename = "classDiagramTemplate.ftl";
-        String generateFilename = "classDiagram.txt";
+        String generateFilename = getGenerateFilename(commandOption);
         generateTemplate(templateFilename, generateFilename, params);
         String generateFilePath = Paths.get(".").toAbsolutePath().normalize().toString() + File.separator + generateFilename;
         logger.info("PlantUML text have generated to {}", generateFilePath);
         logger.info("End generating.");
         return true;
+    }
+
+    private String getGenerateFilename(CommandOption commandOption) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("classDiagram-");
+        sb.append(commandOption.getTopPackageName().replaceAll("\\.", "-"));
+        if (commandOption.getMembers() != null && !commandOption.getMembers()){
+            sb.append("-without-members");
+        }
+        sb.append(".txt");
+        return sb.toString();
     }
 
     private Map<String, Object> getParameters(List<MyEntity> myEntities, CommandOption commandOption) {
