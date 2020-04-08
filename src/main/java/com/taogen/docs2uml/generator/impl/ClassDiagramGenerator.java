@@ -43,6 +43,10 @@ public class ClassDiagramGenerator extends AbstractGenerator {
         StringBuilder sb = new StringBuilder();
         sb.append("classDiagram-");
         sb.append(commandOption.getTopPackageName().replaceAll("\\.", "-"));
+        if (commandOption.getSpecifiedClass() != null && !commandOption.getSpecifiedClass().isEmpty()){
+            sb.append("-");
+            sb.append(commandOption.getSpecifiedClass());
+        }
         if (commandOption.getMembers() != null && !commandOption.getMembers()){
             sb.append("-without-members");
         }

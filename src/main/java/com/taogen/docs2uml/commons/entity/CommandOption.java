@@ -13,6 +13,7 @@ public class CommandOption {
     private String packageName;
     private Boolean subPackage;
     private Boolean members;
+    private String specifiedClass;
 
     public CommandOption() {
     }

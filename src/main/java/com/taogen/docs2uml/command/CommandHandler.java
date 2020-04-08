@@ -23,6 +23,8 @@ public class CommandHandler {
     private static final String SUB_PACKAGE_FULL_OPTION = "--subpackage";
     private static final String MEMBERS_OPTION = "-m";
     private static final String MEMBERS_FULL_OPTION = "--members";
+    private static final String CLASS_OPTION = "-c";
+    private static final String CLASS_FULL_OPTION = "--class";
 
     private static final Logger logger = LogManager.getLogger();
 
@@ -53,48 +55,37 @@ public class CommandHandler {
         for (int i = 0; i < arguments.length; i = i + 2) {
             argumentsMap.put(arguments[i], arguments[i + 1]);
         }
-        return checkAndSetArguments(argumentsMap);
+        ErrorMessage errorMessage = checkArguments(argumentsMap);
+        if (CommandError.SUCCESS_CODE.equals(errorMessage.getErrorCode())) {
+            setArgumentsByMap(argumentsMap);
+        }
+        return errorMessage;
     }
 
-    private ErrorMessage checkAndSetArguments(Map<String, String> argumentsMap) {
-        String url = argumentsMap.get(URL_OPTION);
-        url = url != null ? url : argumentsMap.get(URL_FULL_OPTION);
-        String packageName = argumentsMap.get(PACKAGE_OPTION);
-        packageName = packageName != null ? packageName : argumentsMap.get(PACKAGE_FULL_OPTION);
-        String subPacakge = argumentsMap.get(SUB_PACKAGE_OPTION);
-        subPacakge = subPacakge != null ? subPacakge : argumentsMap.get(SUB_PACKAGE_FULL_OPTION);
-        String members = argumentsMap.get(MEMBERS_OPTION);
-        members = members != null ? members : argumentsMap.get(MEMBERS_FULL_OPTION);
-
-        if (url == null || packageName == null) {
+    private ErrorMessage checkArguments(Map<String, String> argumentsMap) {
+        String url = getOptionByKeys(argumentsMap, URL_OPTION, URL_FULL_OPTION);
+        if (url == null) {
+            return CommandError.getErrorMessageByCode(CommandError.ERROR_CODE_MISS_PARAM);
+        }
+        if (getOptionByKeys(argumentsMap, PACKAGE_OPTION, PACKAGE_FULL_OPTION) == null) {
             return CommandError.getErrorMessageByCode(CommandError.ERROR_CODE_MISS_PARAM);
         }
         if (!isLegalUrl(url)) {
             return CommandError.getErrorMessageByCode(CommandError.ERROR_CODE_PARAM_VALUE_FORMAT_ERROR);
         }
-        if (subPacakge != null && !isBooleanValue(subPacakge)) {
+        String subPackage = getOptionByKeys(argumentsMap, SUB_PACKAGE_OPTION, SUB_PACKAGE_FULL_OPTION);
+        if (subPackage != null && !isBooleanValue(subPackage)) {
             return CommandError.getErrorMessageByCode(CommandError.ERROR_CODE_PARAM_VALUE_FORMAT_ERROR);
         }
+        String members = getOptionByKeys(argumentsMap, MEMBERS_OPTION, MEMBERS_FULL_OPTION);
         if (members != null && !isBooleanValue(members)) {
             return CommandError.getErrorMessageByCode(CommandError.ERROR_CODE_PARAM_VALUE_FORMAT_ERROR);
         }
+        return CommandError.getErrorMessageByCode(CommandError.SUCCESS_CODE);
+    }
 
-        this.commandOption.setUrl(url);
-        this.commandOption.setPackageName(packageName);
-        this.commandOption.setTopPackageName(packageName);
-        if (subPacakge != null) {
-            this.commandOption.setSubPackage(Boolean.parseBoolean(subPacakge));
-        } else {
-            // set subPackage default value: false
-            this.commandOption.setSubPackage(false);
-        }
-        if (members != null) {
-            this.commandOption.setMembers(Boolean.parseBoolean(members));
-        } else {
-            // default value
-            this.commandOption.setMembers(true);
-        }
-        return CommandError.getErrorMessageByCode(com.taogen.docs2uml.commons.constant.CommandError.SUCCESS_CODE);
+    private String getOptionByKeys(Map<String, String> arguments, String shortOptionKey, String fullOptionKey) {
+        return arguments.get(shortOptionKey) == null ? arguments.get(fullOptionKey) : arguments.get(shortOptionKey);
     }
 
     private boolean isBooleanValue(String subPacakge) {
@@ -103,5 +94,27 @@ public class CommandHandler {
 
     private boolean isLegalUrl(String url) {
         return url.startsWith("http://") || url.startsWith("https://");
+    }
+
+    private void setArgumentsByMap(Map<String, String> argumentsMap) {
+        this.commandOption.setUrl(getOptionByKeys(argumentsMap, URL_OPTION, URL_FULL_OPTION));
+        String packageName = getOptionByKeys(argumentsMap, PACKAGE_OPTION, PACKAGE_FULL_OPTION);
+        this.commandOption.setPackageName(packageName);
+        this.commandOption.setTopPackageName(packageName);
+        String subPackage = getOptionByKeys(argumentsMap, SUB_PACKAGE_OPTION, SUB_PACKAGE_FULL_OPTION);
+        if (subPackage != null) {
+            this.commandOption.setSubPackage(Boolean.parseBoolean(subPackage));
+        } else {
+            // set subPackage default value: false
+            this.commandOption.setSubPackage(false);
+        }
+        String members = getOptionByKeys(argumentsMap, MEMBERS_OPTION, MEMBERS_FULL_OPTION);
+        if (members != null) {
+            this.commandOption.setMembers(Boolean.parseBoolean(members));
+        } else {
+            // default value
+            this.commandOption.setMembers(true);
+        }
+        this.commandOption.setSpecifiedClass(getOptionByKeys(argumentsMap, CLASS_OPTION, CLASS_FULL_OPTION));
     }
 }

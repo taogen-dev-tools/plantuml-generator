@@ -6,6 +6,7 @@ import com.taogen.docs2uml.commons.constant.Visibility;
 import com.taogen.docs2uml.commons.entity.*;
 import com.taogen.docs2uml.commons.exception.FailConnectException;
 import com.taogen.docs2uml.commons.exception.NotFoundElementException;
+import com.taogen.docs2uml.commons.util.GenericUtil;
 import com.taogen.docs2uml.parser.AbstractParser;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -26,6 +27,7 @@ public class ClassDetailsParser extends AbstractParser {
 
     @Override
     public List<MyEntity> parse(Object document, CommandOption commandOption) {
+        checkDocumentInstance(document);
         logger.info("Begin to parse {}", commandOption.getUrl());
         List<MyEntity> myEntities = getContainSingleMyEntityListByDocument((Document) document, commandOption);
         logger.info("End to parse {}", myEntities.get(0).getClassName());
@@ -40,11 +42,14 @@ public class ClassDetailsParser extends AbstractParser {
         String packageName;
         EntityType entityType;
         String className;
+        String classNameWithoutGeneric;
         MyEntity parentClass = new MyEntity();
         List<MyEntity> parentInterfaces = new ArrayList<>();
         boolean isAbstract;
         List<MyField> fields = new ArrayList<>();
         List<MyMethod> methods = new ArrayList<>();
+        List<MyEntity> subClasses = new ArrayList<>();
+        List<MyEntity> subInterfaces = new ArrayList<>();
 
         try {
             Element headerElement = document.getElementsByClass("header").get(0);
@@ -53,18 +58,20 @@ public class ClassDetailsParser extends AbstractParser {
             Element descriptionElement = document.getElementsByClass("description").first();
             String classElementText = classElement.text();
             // class name
-            className = classElementText.substring(classElementText.indexOf(' ')+1);
-            if (className.contains(GENERIC_LEFT_MARK) && className.contains("extends")){
+            className = classElementText.substring(classElementText.indexOf(' ') + 1);
+            if (className.contains(GENERIC_LEFT_MARK) && className.contains("extends")) {
                 className = className.substring(0, className.indexOf("extends") - 1) + GENERIC_RIGHT_MARK;
             }
+            classNameWithoutGeneric = GenericUtil.removeGeneric(className);
             // entity type
             entityType = EntityType.valueOf(classElementText.split(" ")[0].toUpperCase());
             // parent class
             parentClass.setClassName(getParentClassName(document, className, commandOption));
+            parentClass.setClassNameWithoutGeneric(GenericUtil.removeGeneric(parentClass.getClassName()));
             // package name
             packageName = packageElement.text();
             // super interfaces
-            parentInterfaces.addAll(getSuperInterfaces(descriptionElement, className));
+            parentInterfaces.addAll(getSuperInterfaces(descriptionElement));
             // is abstract
             Element isAbstractElement = descriptionElement.getElementsByTag("pre").first();
             isAbstract = isAbstractElement.html().contains(DecorativeKeyword.ABSTRACT);
@@ -83,6 +90,10 @@ public class ClassDetailsParser extends AbstractParser {
             if (methodsElement != null) {
                 methods.addAll(getMethodsByElement(methodsElement));
             }
+            // subClasses
+            subClasses.addAll(getSubClasses(descriptionElement));
+            // subInterfaces
+            subInterfaces.addAll(getSubInterfaces(descriptionElement));
         } catch (IndexOutOfBoundsException | NullPointerException | NotFoundElementException e) {
             logger.error("{}: {}", e.getClass().getName(), e.getMessage(), e);
             throw new NotFoundElementException(String.format(NOT_FOUND_ELEMENTS_ERROR, commandOption.getUrl()));
@@ -92,11 +103,14 @@ public class ClassDetailsParser extends AbstractParser {
         classDetailsEntity.setPackageName(packageName);
         classDetailsEntity.setType(entityType);
         classDetailsEntity.setClassName(className);
+        classDetailsEntity.setClassNameWithoutGeneric(classNameWithoutGeneric);
         classDetailsEntity.setParentClass(parentClass);
         classDetailsEntity.setParentInterfaces(parentInterfaces);
         classDetailsEntity.setIsAbstract(isAbstract);
         classDetailsEntity.setFields(fields);
         classDetailsEntity.setMethods(methods);
+        classDetailsEntity.setSubClasses(subClasses);
+        classDetailsEntity.setSubInterfaces(subInterfaces);
         myEntities.add(classDetailsEntity);
         return myEntities;
     }
@@ -112,7 +126,7 @@ public class ClassDetailsParser extends AbstractParser {
                 int packageIndex = parentClassName.lastIndexOf('.');
                 parentClassName = parentClassName.substring(packageIndex + 1);
             } else {
-                if (parentClassName.contains(OBJECT_CLASS_PATH)){
+                if (parentClassName.contains(OBJECT_CLASS_PATH)) {
                     return null;
                 }
             }
@@ -122,28 +136,41 @@ public class ClassDetailsParser extends AbstractParser {
         return parentClassName;
     }
 
-    private List<MyEntity> getSuperInterfaces(Element descriptionElement, String className) {
-        List<MyEntity> superInterfaces = new ArrayList<>();
+    private List<MyEntity> getSuperInterfaces(Element descriptionElement) {
+        return getClassListFromDescription(descriptionElement, Arrays.asList("Superinterfaces", "Implemented Interfaces"));
+    }
+
+    private List<MyEntity> getSubClasses(Element descriptionElement) {
+        return getClassListFromDescription(descriptionElement, Arrays.asList("Implementing Classes", "Subclasses"));
+    }
+
+    private List<MyEntity> getSubInterfaces(Element descriptionElement) {
+        return getClassListFromDescription(descriptionElement, Arrays.asList("Subinterfaces"));
+    }
+
+    private List<MyEntity> getClassListFromDescription(Element descriptionElement, List<String> descriptions) {
+        List<MyEntity> classList = new ArrayList<>();
         Elements dlElements = descriptionElement.getElementsByTag("dl");
-        String parentInterfacesText = null;
+        String classesText = null;
         for (Element dl : dlElements) {
             String title = dl.getElementsByTag("dt").first().text();
-            if (title.contains("Superinterfaces") || title.contains("Implemented Interfaces")) {
-                parentInterfacesText = dl.getElementsByTag("dd").first().text();
-                break;
+            for (String description : descriptions) {
+                if (title.contains(description)) {
+                    classesText = dl.getElementsByTag("dd").first().text();
+                    break;
+                }
             }
         }
-        if (parentInterfacesText != null) {
-            List<String> parentInterfaces = getClassListFromContainsGenericString(parentInterfacesText);
-            for (String interfaceStr : parentInterfaces) {
+        if (classesText != null) {
+            List<String> classNames = getClassListFromContainsGenericString(classesText);
+            for (String name : classNames) {
                 MyEntity myEntity = new MyEntity();
-                myEntity.setClassName(interfaceStr);
-                superInterfaces.add(myEntity);
+                myEntity.setClassName(name);
+                myEntity.setClassNameWithoutGeneric(GenericUtil.removeGeneric(myEntity.getClassName()));
+                classList.add(myEntity);
             }
-        } else {
-            logger.debug("No parent interfaces in {}", className);
         }
-        return superInterfaces;
+        return classList;
     }
 
     private Element getMemberElement(Document document, String summaryName, String className) {
@@ -255,11 +282,10 @@ public class ClassDetailsParser extends AbstractParser {
 
     /**
      * @param parametersText parameters string
-     * parameters string test case:
-     * - replaceAll(List<T> list, T oldVal, T newVal)
+     * @return
+     * @testcase - replaceAll(List<T> list, T oldVal, T newVal)
      * - addAll(Collection<? super T> c, T... elements)
      * - mapEquivalents(List<Locale.LanguageRange> priorityList, Map<String,List<String>> map)
-     * @return
      */
     private List<String> getClassListFromContainsGenericString(String parametersText) {
         List<String> parameterEntries = new ArrayList<>();
@@ -286,9 +312,9 @@ public class ClassDetailsParser extends AbstractParser {
             indexSplit = parametersText.indexOf(',', indexBegin);
         }
         if (indexBegin < parametersText.length() - 1) {
-            parameterEntries.add(parametersText.substring(indexBegin));
+            parameterEntries.add(parametersText.substring(indexBegin).trim());
         }
-        return  parameterEntries;
+        return parameterEntries;
     }
 
     private List<MyMethod> getMethodsByElement(Element methodsElement) {
