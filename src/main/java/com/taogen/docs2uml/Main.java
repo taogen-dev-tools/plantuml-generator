@@ -35,11 +35,26 @@ public class Main {
             List<MyEntity> myEntityList = taskController.execute();
             Generator generator = new ClassDiagramGenerator();
             generator.generate(myEntityList, commandOption);
+            generateMore(generator, myEntityList, commandOption);
             logger.info("Elapsed time: {}ms", (System.currentTimeMillis() - beginTime));
         } catch (KnownException e) {
             logger.error("{}: {}", e.getClass().getName(), e.getMessage(), e);
         } catch (Exception e) {
             logger.error("System internal error!", e);
+        }
+    }
+
+    private static void generateMore(Generator generator, List<MyEntity> myEntityList, CommandOption commandOption) {
+        if (commandOption.getMembers() != null && !commandOption.getMembers()) {
+            commandOption.setMembers(true);
+            generator.generate(myEntityList, commandOption);
+        }
+        if (commandOption.getSpecifiedClass() != null && !commandOption.getSpecifiedClass().isEmpty()){
+            commandOption.setSpecifiedClass(null);
+            commandOption.setMembers(true);
+            generator.generate(myEntityList, commandOption);
+            commandOption.setMembers(false);
+            generator.generate(myEntityList, commandOption);
         }
     }
 }
