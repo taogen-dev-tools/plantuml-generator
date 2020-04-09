@@ -32,18 +32,21 @@ public class Main {
         try {
             long beginTime = System.currentTimeMillis();
             TaskController taskController = new TaskController(commandOption);
-            List<MyEntity> myEntityList = taskController.execute();
+            taskController.execute();
+            List<MyEntity> myEntityList = taskController.getMyEntities();
+            List<MyEntity> specifiedMyEntityList = taskController.getSpecifiedMyEntities();
+            String classPath = commandOption.getTopPackageName();
             if (myEntityList == null || myEntityList.size() == 0) {
-                String classPath = commandOption.getTopPackageName();
-                if (commandOption.getSpecifiedClass() != null && !commandOption.getSpecifiedClass().isEmpty()) {
-                    classPath += "." + commandOption.getSpecifiedClass();
-                }
                 logger.info("can't find classes from path {}", classPath);
                 return;
+            } else {
+                if (commandOption.getSpecifiedClass() != null && (specifiedMyEntityList == null || specifiedMyEntityList.size() == 0)) {
+                    classPath += "." + commandOption.getSpecifiedClass();
+                    logger.info("can't find classes from path {}", classPath);
+                    return;
+                }
             }
-            Generator generator = new ClassDiagramGenerator();
-            generator.generate(myEntityList, commandOption);
-            generateMore(generator, myEntityList, commandOption);
+            generateDiagrams(myEntityList, specifiedMyEntityList, commandOption);
             logger.info("Elapsed time: {}ms", (System.currentTimeMillis() - beginTime));
         } catch (KnownException e) {
             logger.error("{}: {}", e.getClass().getName(), e.getMessage(), e);
@@ -52,17 +55,22 @@ public class Main {
         }
     }
 
-    private static void generateMore(Generator generator, List<MyEntity> myEntityList, CommandOption commandOption) {
-        if (commandOption.getMembers() != null && !commandOption.getMembers()) {
-            commandOption.setMembers(true);
-            generator.generate(myEntityList, commandOption);
-        }
+    private static void generateDiagrams(List<MyEntity> myEntityList, List<MyEntity> specifiedMyEntityList, CommandOption commandOption) {
+        Generator generator = new ClassDiagramGenerator();
         if (commandOption.getSpecifiedClass() != null && !commandOption.getSpecifiedClass().isEmpty()) {
-            commandOption.setSpecifiedClass(null);
-            commandOption.setMembers(true);
+            generator.generate(specifiedMyEntityList, commandOption);
             generator.generate(myEntityList, commandOption);
-            commandOption.setMembers(false);
+            if (commandOption.getMembers() != null && !commandOption.getMembers()) {
+                commandOption.setMembers(true);
+                generator.generate(specifiedMyEntityList, commandOption);
+                generator.generate(myEntityList, commandOption);
+            }
+        } else {
             generator.generate(myEntityList, commandOption);
+            if (commandOption.getMembers() != null && !commandOption.getMembers()) {
+                commandOption.setMembers(true);
+                generator.generate(myEntityList, commandOption);
+            }
         }
     }
 }

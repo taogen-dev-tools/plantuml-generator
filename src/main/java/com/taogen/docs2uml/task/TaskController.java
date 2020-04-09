@@ -24,7 +24,8 @@ public class TaskController {
     private static final Integer THREAD_POOL_COUNT = 5;
     private ExecutorService pool = Executors.newFixedThreadPool(THREAD_POOL_COUNT);
     private ConcurrentLinkedQueue<CrawlerTask> queue = new ConcurrentLinkedQueue();
-    private List<MyEntity> myEntities = new ArrayList<>();
+    private final List<MyEntity> myEntities = new ArrayList<>();
+    private final List<MyEntity> specifiedMyEntities = new ArrayList<>();
     private CommandOption commandOption;
 
     public TaskController(CommandOption commandOption) {
@@ -35,7 +36,7 @@ public class TaskController {
         queue.add(new CrawlerTask(CrawlerType.DOCUMENT, ParserType.PACKAGES, commandOption));
     }
 
-    public List<MyEntity> execute() {
+    public void execute() {
         logger.info("Tasks starting...");
         String specifiedClass = this.commandOption.getSpecifiedClass();
         Map<String, MyEntity> entityMap = null;
@@ -65,24 +66,21 @@ public class TaskController {
             }
         }
         this.pool.shutdown();
-        logger.debug("my entity list size is {}", this.myEntities.size());
+        logger.debug("myEntity list size is {}", this.myEntities.size());
         if (specifiedClass != null && !specifiedClass.isEmpty()) {
             logger.debug("entity map size is {}", entityMap.size());
-            this.myEntities = filterEntityListBySpecifiedClass(entityMap, specifiedClass);
+            setSpecifiedMyEntityListByMap(entityMap, specifiedClass);
+            logger.info("specified myEntity list size is {}", this.specifiedMyEntities.size());
         }
         logger.info("Task end.");
-        logger.info("return entity size is {}", this.myEntities.size());
-        return this.myEntities;
     }
 
-    private List<MyEntity> filterEntityListBySpecifiedClass(Map<String, MyEntity> entityMap, String specifiedClass) {
-        List<MyEntity> resultList = new ArrayList<>();
+    private void setSpecifiedMyEntityListByMap(Map<String, MyEntity> entityMap, String specifiedClass) {
         Set<MyEntity> myEntitySet = new HashSet<>();
         Queue<MyEntity> myEntityQueue = new LinkedList<>();
         MyEntity specifiedEntity = entityMap.get(GenericUtil.removeGeneric(specifiedClass));
         if (specifiedEntity == null) {
             logger.debug("specified class is null");
-            return new ArrayList<>();
         }
         addEntityToSetAndQueue(specifiedEntity, myEntitySet, myEntityQueue);
         while (myEntityQueue.peek() != null) {
@@ -115,8 +113,7 @@ public class TaskController {
                 }
             }
         }
-        resultList.addAll(myEntitySet);
-        return resultList;
+        this.specifiedMyEntities.addAll(myEntitySet);
     }
 
     private void addEntityToSetAndQueue(MyEntity myEntity, Set<MyEntity> myEntitySet, Queue<MyEntity> myEntityQueue) {
@@ -138,5 +135,13 @@ public class TaskController {
             throw new TaskExecuteException(e.getMessage() + "\r\nPlease check the URL: " + url);
         }
         return resultEntities;
+    }
+
+    public List<MyEntity> getMyEntities(){
+        return this.myEntities;
+    }
+
+    public List<MyEntity> getSpecifiedMyEntities(){
+        return this.specifiedMyEntities;
     }
 }

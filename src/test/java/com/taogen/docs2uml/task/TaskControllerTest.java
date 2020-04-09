@@ -11,6 +11,7 @@ public class TaskControllerTest {
     public void execute() {
         CommandOption commandOption = new CommandOption("https://docs.oracle.com/javase/8/docs/api/index.html", "java.lang.invoke");
         TaskController taskController = new TaskController(commandOption);
-        assertNotNull(taskController.execute());
+        taskController.execute();
+        assertNotNull(taskController.getMyEntities());
     }
 }
