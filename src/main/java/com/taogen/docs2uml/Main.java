@@ -33,6 +33,14 @@ public class Main {
             long beginTime = System.currentTimeMillis();
             TaskController taskController = new TaskController(commandOption);
             List<MyEntity> myEntityList = taskController.execute();
+            if (myEntityList == null || myEntityList.size() == 0) {
+                String classPath = commandOption.getTopPackageName();
+                if (commandOption.getSpecifiedClass() != null && !commandOption.getSpecifiedClass().isEmpty()) {
+                    classPath += "." + commandOption.getSpecifiedClass();
+                }
+                logger.info("can't find classes from path {}", classPath);
+                return;
+            }
             Generator generator = new ClassDiagramGenerator();
             generator.generate(myEntityList, commandOption);
             generateMore(generator, myEntityList, commandOption);
@@ -49,7 +57,7 @@ public class Main {
             commandOption.setMembers(true);
             generator.generate(myEntityList, commandOption);
         }
-        if (commandOption.getSpecifiedClass() != null && !commandOption.getSpecifiedClass().isEmpty()){
+        if (commandOption.getSpecifiedClass() != null && !commandOption.getSpecifiedClass().isEmpty()) {
             commandOption.setSpecifiedClass(null);
             commandOption.setMembers(true);
             generator.generate(myEntityList, commandOption);
