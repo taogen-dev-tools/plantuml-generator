@@ -16,7 +16,7 @@ public class DocumentCrawlerTest {
     @Test
     public void crawl() {
         Crawler crawler = CrawlerFactory.create(CrawlerType.DOCUMENT);
-        Document document = (Document) crawler.crawl(new HttpRequest("https://github.com"));
+        Document document = (Document) crawler.crawl(new HttpRequest("https://www.microsoft.com/"));
         assertNotNull(document);
     }
 

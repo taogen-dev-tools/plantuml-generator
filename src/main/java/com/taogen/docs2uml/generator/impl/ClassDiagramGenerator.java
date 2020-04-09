@@ -48,7 +48,7 @@ public class ClassDiagramGenerator extends AbstractGenerator {
             sb.append(commandOption.getSpecifiedClass());
         }
         if (commandOption.getMembers() != null && !commandOption.getMembers()){
-            sb.append("-without-members");
+            sb.append("-(without-members)");
         }
         sb.append(".txt");
         return sb.toString();
