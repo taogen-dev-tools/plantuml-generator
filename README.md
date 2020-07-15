@@ -21,11 +21,11 @@ You can choose any Java IDE to develop this project, We strongly suggest you use
 
 ## How to run
 
-### Get This Project Executable jar File
+### To get this project executable jar file
 
 First of all, you need to get the `plantuml-generator.jar` executable file of this project. 
 
-1) You can get the executable jar file by using Maven command to package the source code. The target packaged jar file is `plantuml-generator-jar-with-dependencies.jar`, and you can rename to `plantuml-generator.jar` or others.
+You can get the executable jar file by using Maven command to package the source code. The target packaged jar file is `plantuml-generator-jar-with-dependencies.jar`, and you can rename to `plantuml-generator.jar` or others.
 
 ```shell
 # clone this project to your local
@@ -36,9 +36,9 @@ mvn package -Dmaven.test.skip=true
 mv target/plantuml-generator-jar-with-dependencies.jar target/plantuml-generator.jar
 ```
 
-2) You can also get the executable jar file by downloading from [GitHub releases](https://github.com/tagnja/plantuml-generator/releases).
+You can also get the executable jar file by downloading from [GitHub releases](https://github.com/tagnja/plantuml-generator/releases).
 
-### Running This Project to Generating PlantUML Text
+### Running this project to generate plantUML text
 
 You can run the following command to get the generated PlantUML text. 
 
@@ -52,9 +52,9 @@ For example,
 java -jar plantuml-generator.jar -u https://docs.oracle.com/javase/8/docs/api/ -p java.nio
 ```
 
-After running this jar file, you will start the project, and get the result of generating PlantUML text. More details about this command refer to the "Usage of plantuml-generator" section.
+After running this jar file, you will start the project, and get the result of generating PlantUML text. More details about this command refer to "Usage" section of this README.
 
-### Using the plantuml.jar to Generating UML diagrams
+### Using the plantuml.jar to generate UML diagrams
 
 You can download the `plantuml.jar` from [PlantUML](https://plantuml.com/download).
 
@@ -78,7 +78,7 @@ There are some common problems for using the `plantuml.jar`:
 
   
 
-## Usage of plantuml-generator
+## Usage
 
 | Option             | Description                                                  | Default | Required | Examples                                                     |
 | ------------------ | ------------------------------------------------------------ | ------- | -------- | ------------------------------------------------------------ |
@@ -88,5 +88,5 @@ There are some common problems for using the `plantuml.jar`:
 | -m or --members    | Whether contains classes' members.                           | true    | No       | -m false                                                     |
 | -c or --class      | Only generating parent classes and subclasses of a specified class. | null    | No       | -c Buffer                                                    |
 
-We strongly suggest to download the Javadoc and to deploy the Javadoc in your local PC. It's faster, and be more friendly to other websites. 
+Note: We strongly suggest to download Javadoc that you need and to deploy the Javadoc in your local PC. It's faster, and be more friendly to other websites. 
 
