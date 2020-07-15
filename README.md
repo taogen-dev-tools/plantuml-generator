@@ -7,7 +7,7 @@
 
 ## What's plantuml-generator
 
-**plantuml-generator** is a tool for generating UML diagrams (that mainly are class diagrams). The plantuml-generator helps you automate generating PlantUML text by specifying a Javadoc API website URL. It fetches [Javadoc](https://en.wikipedia.org/wiki/Javadoc#:~:text=Javadoc%20(originally%20cased%20JavaDoc)%20is,format%20from%20Java%20source%20code.) HTML pages of any Javadoc API websites such as [Java SE](https://docs.oracle.com/javase/8/docs/api/) and [Spring framework](https://docs.spring.io/spring-framework/docs/current/javadoc-api/), then it parses HTML pages to a [PlantUML](https://plantuml.com/) text.
+**plantuml-generator** is a tool for generating UML diagrams (that mainly are class diagrams). The plantuml-generator helps you automate generating [PlantUML](https://plantuml.com/) text by specifying a [Javadoc](https://en.wikipedia.org/wiki/Javadoc#:~:text=Javadoc%20(originally%20cased%20JavaDoc)%20is,format%20from%20Java%20source%20code.) API website URL. It fetches Javadoc HTML pages of any Javadoc API websites such as [Java SE](https://docs.oracle.com/javase/8/docs/api/) and [Spring framework](https://docs.spring.io/spring-framework/docs/current/javadoc-api/), then it parses HTML pages to a PlantUML text.
 
 ## How to develop
 
