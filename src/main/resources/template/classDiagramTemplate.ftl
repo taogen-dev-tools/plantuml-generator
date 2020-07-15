@@ -3,7 +3,9 @@
 <#list entities as myEntity>
 
 'entity
-${myEntity.type} ${myEntity.className} {
+${myEntity.type} ${myEntity.className}
+<#if myEntity.type != "annotation">
+{
 <#if commandOptions.members ?? && commandOptions.members == true>
     'fields
     <#if myEntity.fields??>
@@ -19,6 +21,7 @@ ${myEntity.type} ${myEntity.className} {
     </#if>
 </#if>
 }
+</#if>
 
 'relationship
 <#if myEntity.parentClass??>
