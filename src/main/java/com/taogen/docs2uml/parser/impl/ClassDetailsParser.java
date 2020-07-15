@@ -57,16 +57,20 @@ public class ClassDetailsParser extends AbstractParser {
             Element classElement = headerElement.getElementsByClass("title").first();
             Element descriptionElement = document.getElementsByClass("description").first();
             String classElementText = classElement.text();
+            // entity type
+            entityType = EntityType.valueOf(classElementText.split(" ")[0].toUpperCase());
+            logger.debug("entity type: {}", entityType);
             // class name
-            className = classElementText.substring(classElementText.lastIndexOf(' ') + 1);
+            className = classElementText.substring(classElementText.indexOf(' ') + 1);
+            if (EntityType.ANNOTATION.equals(entityType)){
+                int index = className.indexOf(' ');
+                className = className.substring(index + 1);
+            }
             if (className.contains(GENERIC_LEFT_MARK) && className.contains("extends")) {
                 className = className.substring(0, className.indexOf("extends") - 1) + GENERIC_RIGHT_MARK;
             }
             classNameWithoutGeneric = GenericUtil.removeGeneric(className);
             logger.debug("class name: {}", className);
-            // entity type
-            entityType = EntityType.valueOf(classElementText.split(" ")[0].toUpperCase());
-            logger.debug("entity type: {}", entityType);
             // parent class
             parentClass.setClassName(getParentClassName(document, className, commandOption));
             parentClass.setClassNameWithoutGeneric(GenericUtil.removeGeneric(parentClass.getClassName()));
