@@ -67,7 +67,7 @@ public class ClassesParser extends AbstractParser {
             myEntity.setPackageName(commandOption.getPackageName());
             myEntities.add(myEntity);
         }
-        logger.debug("Package {} classes size is {}", commandOption.getPackageName(), myEntities.size());
+        logger.info("Package {} classes size is {}", commandOption.getPackageName(), myEntities.size());
         return myEntities;
     }
 }

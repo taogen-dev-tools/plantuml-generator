@@ -37,7 +37,7 @@ public class TaskController {
     }
 
     public void execute() {
-        logger.info("Tasks starting...");
+        logger.info("Starting fetch and parse...");
         String specifiedClass = this.commandOption.getSpecifiedClass();
         Map<String, MyEntity> entityMap = null;
         if (specifiedClass != null && !specifiedClass.isEmpty()) {
@@ -66,13 +66,12 @@ public class TaskController {
             }
         }
         this.pool.shutdown();
-        logger.debug("myEntity list size is {}", this.myEntities.size());
+        logger.info("Parsed {} classes", this.myEntities.size());
         if (specifiedClass != null && !specifiedClass.isEmpty()) {
-            logger.debug("entity map size is {}", entityMap.size());
+            logger.debug("Entity map size is {}", entityMap.size());
             setSpecifiedMyEntityListByMap(entityMap, specifiedClass);
-            logger.info("specified myEntity list size is {}", this.specifiedMyEntities.size());
+            logger.info("Your specified {} classes", this.specifiedMyEntities.size());
         }
-        logger.info("Task end.");
     }
 
     private void setSpecifiedMyEntityListByMap(Map<String, MyEntity> entityMap, String specifiedClass) {

@@ -28,14 +28,15 @@ public class ClassDiagramGenerator extends AbstractGenerator {
 
     @Override
     public Boolean generate(List<MyEntity> myEntities, CommandOption commandOption) {
-        logger.info("Start generating...");
+        logger.info("Starting generation...");
         Map<String, Object> params = getParameters(myEntities, commandOption);
         String templateFilename = "classDiagramTemplate.ftl";
         String generateFilename = getGenerateFilename(commandOption);
         generateTemplate(templateFilename, generateFilename, params);
         String generateFilePath = Paths.get(".").toAbsolutePath().normalize().toString() + File.separator + generateFilename;
-        logger.info("PlantUML text have generated to {}", generateFilePath);
-        logger.info("End generating.");
+        logger.info("<<<");
+        logger.info("Your plantuml text has generated to {}!", generateFilePath);
+        logger.info(">>>");
         return true;
     }
 

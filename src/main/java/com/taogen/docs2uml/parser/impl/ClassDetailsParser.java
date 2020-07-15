@@ -28,9 +28,8 @@ public class ClassDetailsParser extends AbstractParser {
     @Override
     public List<MyEntity> parse(Object document, CommandOption commandOption) {
         checkDocumentInstance(document);
-        logger.info("Begin to parse {}", commandOption.getUrl());
+        logger.info("Parsing {}", commandOption.getUrl());
         List<MyEntity> myEntities = getContainSingleMyEntityListByDocument((Document) document, commandOption);
-        logger.info("End to parse {}", myEntities.get(0).getClassName());
         return myEntities;
     }
 
