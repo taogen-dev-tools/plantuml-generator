@@ -57,20 +57,15 @@ public class Main {
 
     private static void generateDiagrams(List<MyEntity> myEntityList, List<MyEntity> specifiedMyEntityList, CommandOption commandOption) {
         Generator generator = new ClassDiagramGenerator();
-        if (commandOption.getSpecifiedClass() != null && !commandOption.getSpecifiedClass().isEmpty()) {
+        logger.debug("commandOption is {}", commandOption.toString());
+        if (doesSpecifyClass(commandOption)) {
             generator.generate(specifiedMyEntityList, commandOption);
-            generator.generate(myEntityList, commandOption);
-            if (commandOption.getMembers() != null && !commandOption.getMembers()) {
-                commandOption.setMembers(true);
-                generator.generate(specifiedMyEntityList, commandOption);
-                generator.generate(myEntityList, commandOption);
-            }
         } else {
             generator.generate(myEntityList, commandOption);
-            if (commandOption.getMembers() != null && !commandOption.getMembers()) {
-                commandOption.setMembers(true);
-                generator.generate(myEntityList, commandOption);
-            }
         }
+    }
+
+    private static boolean doesSpecifyClass(CommandOption commandOption) {
+        return commandOption.getSpecifiedClass() != null && !commandOption.getSpecifiedClass().isEmpty();
     }
 }
