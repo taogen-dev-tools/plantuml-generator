@@ -11,13 +11,13 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import sun.nio.cs.ext.PCK;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 public class ClassDetailsParserTest {
 
