@@ -6,7 +6,7 @@
         </Console>
     </Appenders>
     <Loggers>
-        <Logger name="com.taogen.docs2uml" level="debug" additivity="false">
+        <Logger name="com.taogen.docs2uml" level="info" additivity="false">
             <AppenderRef ref="Console"/>
         </Logger>
         <Root level="error">
