@@ -96,3 +96,25 @@ There are some common problems for using the `plantuml.jar`:
 
 Note: We strongly suggest to download Javadoc that you need and to deploy the Javadoc in your local PC. It's faster, and be more friendly to other websites. 
 
+**Get Javadoc**
+
+Downloads Javadoc online:
+
+- [Java SE](https://www.oracle.com/java/technologies/javase-downloads.html)
+- [Spring framework](https://repo.spring.io/libs-release/org/springframework/spring/)
+- [MyBatis](https://javadoc.io/doc/org.mybatis/mybatis/latest/index.html)
+- [Hibernate](https://hibernate.org/orm/releases/)
+- ...
+
+Generating Javadoc with source code:
+
+```shell
+javadoc -d <javadoc_output_path> -sourcepath <src_dir> -subpackages java:<your_package_path>
+```
+
+For example:
+
+```shell
+javadoc -d ./api-docs -sourcepath src/main/java -subpackages java:com.taogen.docs2uml
+```
+
