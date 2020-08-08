@@ -81,9 +81,19 @@ public class TaskController {
         if (specifiedEntity == null) {
             logger.debug("specified class is null");
         }
+        putAllSuperClassesToSet(entityMap, specifiedEntity, myEntitySet, myEntityQueue);
+        myEntitySet.remove(specifiedEntity);
+        putAllSubClassesToSet(entityMap, specifiedEntity, myEntitySet, myEntityQueue);
+        this.specifiedMyEntities.addAll(myEntitySet);
+    }
+
+    private void putAllSuperClassesToSet(Map<String, MyEntity> entityMap, MyEntity specifiedEntity, Set<MyEntity> myEntitySet, Queue<MyEntity> myEntityQueue) {
         addEntityToSetAndQueue(specifiedEntity, myEntitySet, myEntityQueue);
+        logger.debug("Put all super class to set...");
+        logger.debug("Queue size is {}", myEntityQueue.size());
         while (myEntityQueue.peek() != null) {
             MyEntity myEntity = myEntityQueue.poll();
+            logger.debug("super class: {}", myEntity.getClassName());
             if (myEntity.getParentClass() != null && entityMap.get(myEntity.getParentClass().getClassNameWithoutGeneric()) != null) {
                 addEntityToSetAndQueue(entityMap.get(myEntity.getParentClass().getClassNameWithoutGeneric()), myEntitySet, myEntityQueue);
             }
@@ -95,6 +105,16 @@ public class TaskController {
                     }
                 }
             }
+        }
+    }
+
+    private void putAllSubClassesToSet(Map<String, MyEntity> entityMap, MyEntity specifiedEntity, Set<MyEntity> myEntitySet, Queue<MyEntity> myEntityQueue) {
+        addEntityToSetAndQueue(specifiedEntity, myEntitySet, myEntityQueue);
+        logger.debug("Put all sub class to set...");
+        logger.debug("Queue size is {}", myEntityQueue.size());
+        while (myEntityQueue.peek() != null){
+            MyEntity myEntity = myEntityQueue.poll();
+            logger.debug("sub class: {}", myEntity.getClassName());
             List<MyEntity> subClasses = myEntity.getSubClasses();
             if (myEntity.getSubClasses() != null) {
                 for (MyEntity e : subClasses) {
@@ -112,7 +132,6 @@ public class TaskController {
                 }
             }
         }
-        this.specifiedMyEntities.addAll(myEntitySet);
     }
 
     private void addEntityToSetAndQueue(MyEntity myEntity, Set<MyEntity> myEntitySet, Queue<MyEntity> myEntityQueue) {
@@ -121,6 +140,8 @@ public class TaskController {
                 myEntityQueue.add(myEntity);
             }
             myEntitySet.add(myEntity);
+        } else {
+            logger.debug("myEntity: {}, MyEntitySet: {}, MyEntityQueue: {}", myEntity, myEntitySet, myEntityQueue);
         }
     }
 
