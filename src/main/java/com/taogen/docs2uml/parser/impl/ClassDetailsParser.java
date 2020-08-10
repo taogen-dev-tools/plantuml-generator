@@ -172,7 +172,7 @@ public class ClassDetailsParser extends AbstractParser {
             if (indexOfExtends != -1) {
                 String extendsText = preElementSplit[1].substring(indexOfExtends + target.length());
                 List<String> classNames = getClassListFromContainsGenericString(extendsText);
-                if (classNames != null && classNames.size() >= 1) {
+                if (classNames != null && classNames.size() >= 1 && !"Object".equals(classNames.get(0))) {
                     MyEntity myEntity = new MyEntity();
                     myEntity.setClassName(classNames.get(0));
                     myEntity.setClassNameWithoutGeneric(GenericUtil.removeGeneric(myEntity.getClassName()));
