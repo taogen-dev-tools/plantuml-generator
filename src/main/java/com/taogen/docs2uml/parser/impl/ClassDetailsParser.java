@@ -168,15 +168,23 @@ public class ClassDetailsParser extends AbstractParser {
         String[] preElementSplit = preElementText.split("\n");
         if (EntityType.CLASS.equals(entityType) && preElementSplit.length > 1) {
             String target = "extends";
-            int indexOfExtends = preElementSplit[1].indexOf(target);
-            if (indexOfExtends != -1) {
-                String extendsText = preElementSplit[1].substring(indexOfExtends + target.length());
-                List<String> classNames = getClassListFromContainsGenericString(extendsText);
-                if (classNames != null && classNames.size() >= 1 && !"Object".equals(classNames.get(0))) {
-                    MyEntity myEntity = new MyEntity();
-                    myEntity.setClassName(classNames.get(0));
-                    myEntity.setClassNameWithoutGeneric(GenericUtil.removeGeneric(myEntity.getClassName()));
-                    return myEntity;
+            String targetText = null;
+            for (String preLineString : preElementSplit) {
+                if (preLineString.startsWith(target)) {
+                    targetText = preLineString;
+                }
+            }
+            if (targetText != null) {
+                int indexOfExtends = targetText.indexOf(target);
+                if (indexOfExtends != -1) {
+                    String extendsText = targetText.substring(indexOfExtends + target.length());
+                    List<String> classNames = getClassListFromContainsGenericString(extendsText);
+                    if (classNames != null && classNames.size() >= 1 && !"Object".equals(classNames.get(0))) {
+                        MyEntity myEntity = new MyEntity();
+                        myEntity.setClassName(classNames.get(0));
+                        myEntity.setClassNameWithoutGeneric(GenericUtil.removeGeneric(myEntity.getClassName()));
+                        return myEntity;
+                    }
                 }
             }
         }
