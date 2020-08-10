@@ -1,6 +1,7 @@
 package com.taogen.docs2uml.task;
 
 import com.taogen.docs2uml.commons.constant.CrawlerType;
+import com.taogen.docs2uml.commons.constant.EntityType;
 import com.taogen.docs2uml.commons.constant.ParserType;
 import com.taogen.docs2uml.commons.entity.CommandOption;
 import com.taogen.docs2uml.commons.entity.MyEntity;
@@ -11,6 +12,7 @@ import org.apache.logging.log4j.Logger;
 
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.stream.Collectors;
 
 /**
  * @author Taogen
@@ -22,10 +24,10 @@ public class TaskController {
      * Warning: Too big too fast can lead to request of destination server be refused. It will throw java.net.SocketTimeoutException: Read timed out
      */
     private static final Integer THREAD_POOL_COUNT = 5;
-    private ExecutorService pool = Executors.newFixedThreadPool(THREAD_POOL_COUNT);
-    private ConcurrentLinkedQueue<CrawlerTask> queue = new ConcurrentLinkedQueue();
     private final List<MyEntity> myEntities = new ArrayList<>();
     private final List<MyEntity> specifiedMyEntities = new ArrayList<>();
+    private ExecutorService pool = Executors.newFixedThreadPool(THREAD_POOL_COUNT);
+    private ConcurrentLinkedQueue<CrawlerTask> queue = new ConcurrentLinkedQueue();
     private CommandOption commandOption;
 
     public TaskController(CommandOption commandOption) {
@@ -72,6 +74,36 @@ public class TaskController {
             setSpecifiedMyEntityListByMap(entityMap, specifiedClass);
             logger.info("Your specified {} classes", this.specifiedMyEntities.size());
         }
+        addOtherPackageInterfaces(myEntities);
+        if (specifiedClass != null) {
+            addOtherPackageInterfaces(specifiedMyEntities);
+        }
+    }
+
+    private void addOtherPackageInterfaces(List<MyEntity> myEntities) {
+        Set<MyEntity> toAddMyEntities = new HashSet<>();
+        if (myEntities != null) {
+            Set<String> classNames = myEntities.stream().map(myEntity1 -> myEntity1.getClassNameWithoutGeneric()).collect(Collectors.toSet());
+            for (MyEntity myEntity : myEntities) {
+                List<MyEntity> interfaces = myEntity.getParentInterfaces();
+                if (interfaces != null) {
+                    for (MyEntity myInterface : interfaces) {
+                        if (!classNames.contains(myInterface.getClassNameWithoutGeneric())) {
+                            MyEntity toAddMyEntity = new MyEntity();
+                            toAddMyEntity.setClassName(myInterface.getClassName());
+                            toAddMyEntity.setClassNameWithoutGeneric(myInterface.getClassNameWithoutGeneric());
+                            toAddMyEntity.setType(EntityType.INTERFACE);
+                            toAddMyEntity.setIsAbstract(false);
+                            toAddMyEntity.setPackageName(myInterface.getPackageName());
+                            toAddMyEntities.add(toAddMyEntity);
+                        }
+                    }
+                }
+            }
+            for (MyEntity myEntity : toAddMyEntities) {
+                myEntities.add(myEntity);
+            }
+        }
     }
 
     private void setSpecifiedMyEntityListByMap(Map<String, MyEntity> entityMap, String specifiedClass) {
@@ -112,7 +144,7 @@ public class TaskController {
         addEntityToSetAndQueue(specifiedEntity, myEntitySet, myEntityQueue);
         logger.debug("Put all sub class to set...");
         logger.debug("Queue size is {}", myEntityQueue.size());
-        while (myEntityQueue.peek() != null){
+        while (myEntityQueue.peek() != null) {
             MyEntity myEntity = myEntityQueue.poll();
             logger.debug("sub class: {}", myEntity.getClassName());
             List<MyEntity> subClasses = myEntity.getSubClasses();
@@ -157,11 +189,11 @@ public class TaskController {
         return resultEntities;
     }
 
-    public List<MyEntity> getMyEntities(){
+    public List<MyEntity> getMyEntities() {
         return this.myEntities;
     }
 
-    public List<MyEntity> getSpecifiedMyEntities(){
+    public List<MyEntity> getSpecifiedMyEntities() {
         return this.specifiedMyEntities;
     }
 }
