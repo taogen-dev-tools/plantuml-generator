@@ -71,8 +71,7 @@ public class ClassDetailsParser extends AbstractParser {
             classNameWithoutGeneric = GenericUtil.removeGeneric(className);
             logger.debug("class name: {}", className);
             // parent class
-            parentClass.setClassName(getParentClassName(document, className, commandOption));
-            parentClass.setClassNameWithoutGeneric(GenericUtil.removeGeneric(parentClass.getClassName()));
+            parentClass = getParentClassFromDescriptionPre(entityType, descriptionElement);
             // package name
             packageName = packageElement.text();
             logger.debug("package name: {}", packageName);
@@ -121,6 +120,14 @@ public class ClassDetailsParser extends AbstractParser {
         return myEntities;
     }
 
+    /**
+     * Deprecated
+     * @deprecated
+     * @param document
+     * @param className
+     * @param commandOption
+     * @return
+     */
     private String getParentClassName(Document document, String className, CommandOption commandOption) {
         String parentClassName = null;
         try {
@@ -144,7 +151,7 @@ public class ClassDetailsParser extends AbstractParser {
 
     private List<MyEntity> getSuperInterfaces(EntityType entityType, Element descriptionElement) {
 //        return getClassListFromDescription(descriptionElement, Arrays.asList("Superinterfaces", "Implemented Interfaces"));
-        return getClassListFromDescriptionPre(entityType, descriptionElement);
+        return getSuperInterfacesFromDescriptionPre(entityType, descriptionElement);
     }
 
     private List<MyEntity> getSubClasses(Element descriptionElement) {
@@ -155,7 +162,28 @@ public class ClassDetailsParser extends AbstractParser {
         return getClassListFromDescription(descriptionElement, Arrays.asList("Subinterfaces"));
     }
 
-    private List<MyEntity> getClassListFromDescriptionPre(EntityType entityType, Element descriptionElement) {
+    private MyEntity getParentClassFromDescriptionPre(EntityType entityType, Element descriptionElement) {
+        Element preElement = descriptionElement.getElementsByTag("pre").first();
+        String preElementText = preElement.text();
+        String[] preElementSplit = preElementText.split("\n");
+        if (EntityType.CLASS.equals(entityType) && preElementSplit.length > 1) {
+            String target = "extends";
+            int indexOfExtends = preElementSplit[1].indexOf(target);
+            if (indexOfExtends != -1) {
+                String extendsText = preElementSplit[1].substring(indexOfExtends + target.length());
+                List<String> classNames = getClassListFromContainsGenericString(extendsText);
+                if (classNames != null && classNames.size() >= 1) {
+                    MyEntity myEntity = new MyEntity();
+                    myEntity.setClassName(classNames.get(0));
+                    myEntity.setClassNameWithoutGeneric(GenericUtil.removeGeneric(myEntity.getClassName()));
+                    return myEntity;
+                }
+            }
+        }
+        return null;
+    }
+
+    private List<MyEntity> getSuperInterfacesFromDescriptionPre(EntityType entityType, Element descriptionElement) {
         List<MyEntity> classList = new ArrayList<>();
         Element preElement = descriptionElement.getElementsByTag("pre").first();
         String preElementText = preElement.text();
