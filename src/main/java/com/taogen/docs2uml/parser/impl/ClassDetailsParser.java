@@ -187,19 +187,30 @@ public class ClassDetailsParser extends AbstractParser {
         List<MyEntity> classList = new ArrayList<>();
         Element preElement = descriptionElement.getElementsByTag("pre").first();
         String preElementText = preElement.text();
-        String interfaceTarget = "implements";
-        if (EntityType.INTERFACE.equals(entityType)) {
-            interfaceTarget = "extends";
-        }
-        int indexOfSuperInterface = preElementText.indexOf(interfaceTarget);
-        if (indexOfSuperInterface != -1) {
-            String superInterfacesText = preElementText.substring(indexOfSuperInterface + interfaceTarget.length());
-            List<String> classNames = getClassListFromContainsGenericString(superInterfacesText);
-            for (String name : classNames) {
-                MyEntity myEntity = new MyEntity();
-                myEntity.setClassName(name);
-                myEntity.setClassNameWithoutGeneric(GenericUtil.removeGeneric(myEntity.getClassName()));
-                classList.add(myEntity);
+        String[] preElementTextSplit = preElementText.split("\n");
+        if (preElementTextSplit != null && preElementTextSplit.length > 1){
+            String targetText = null;
+            String interfaceTarget = "implements";
+            if (EntityType.INTERFACE.equals(entityType)) {
+                interfaceTarget = "extends";
+            }
+            for (int i = 1; i < preElementTextSplit.length; i++){
+                if (preElementTextSplit[i].contains(interfaceTarget)) {
+                    targetText = preElementTextSplit[i];
+                }
+            }
+            if (targetText != null) {
+                int indexOfSuperInterface = targetText.indexOf(interfaceTarget);
+                if (indexOfSuperInterface != -1) {
+                    String superInterfacesText = targetText.substring(indexOfSuperInterface + interfaceTarget.length());
+                    List<String> classNames = getClassListFromContainsGenericString(superInterfacesText);
+                    for (String name : classNames) {
+                        MyEntity myEntity = new MyEntity();
+                        myEntity.setClassName(name);
+                        myEntity.setClassNameWithoutGeneric(GenericUtil.removeGeneric(myEntity.getClassName()));
+                        classList.add(myEntity);
+                    }
+                }
             }
         }
         return classList;
