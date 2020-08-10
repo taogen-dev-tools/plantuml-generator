@@ -12,6 +12,7 @@ public class MyEntityVo {
     private String type;
     private String isAbstract;
     private String className;
+    private String packageName;
     private String classNameWithoutGeneric;
     private String parentClass;
     private List<String> parentInterfaces;

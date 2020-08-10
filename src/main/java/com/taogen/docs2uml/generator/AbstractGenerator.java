@@ -74,6 +74,7 @@ public abstract class AbstractGenerator implements Generator {
                 } else {
                     myEntityVo.setType(myEntity.getType().toString().toLowerCase());
                 }
+                myEntityVo.setPackageName(myEntity.getPackageName());
                 myEntityVo.setIsAbstract(getDecorativeGenerate(DecorativeKeyword.ABSTRACT, myEntity.getIsAbstract()));
                 // entity fields
                 myEntityVo.setFields(getFieldVosByFields(myEntity.getFields()));
