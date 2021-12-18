@@ -16,7 +16,7 @@
         <!-- custom properties -->
         <project.java.version>1.8</project.java.version>
         <junit.version>4.13.1</junit.version>
-        <log4j.version>2.16.0</log4j.version>
+        <log4j.version>2.17.0</log4j.version>
         <mvn.jar.plugin.mainclass>com.taogen.docs2uml.Main</mvn.jar.plugin.mainclass>
     </properties>
     <dependencies>
