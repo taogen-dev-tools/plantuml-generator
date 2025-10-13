@@ -16,7 +16,8 @@
         <!-- custom properties -->
         <project.java.version>1.8</project.java.version>
         <junit.version>4.13.1</junit.version>
-        <log4j.version>2.17.1</log4j.version>
+        <slf4j.version>2.0.17</slf4j.version>
+        <log4j.version>2.25.2</log4j.version>
         <mvn.jar.plugin.mainclass>com.taogen.docs2uml.Main</mvn.jar.plugin.mainclass>
     </properties>
     <dependencies>
@@ -29,6 +30,16 @@
         </dependency>
 
         <!-- ** Logging ** -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>${slf4j.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-slf4j2-impl</artifactId> <!-- Use log4j-slf4j-impl for SLF4J 1.x -->
+            <version>${log4j.version}</version> <!-- Or the latest Log4j2 version -->
+        </dependency>
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-api</artifactId>
@@ -44,7 +55,7 @@
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <version>1.18.4</version>
+            <version>1.18.42</version>
             <scope>provided</scope>
         </dependency>
 

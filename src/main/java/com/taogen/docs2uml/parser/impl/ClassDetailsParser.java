@@ -178,7 +178,7 @@ public class ClassDetailsParser extends AbstractParser {
                 int indexOfExtends = targetText.indexOf(target);
                 if (indexOfExtends != -1) {
                     String extendsText = targetText.substring(indexOfExtends + target.length());
-                    List<String> classNames = getClassListFromContainsGenericString(extendsText);
+                    List<String> classNames = GenericUtil.getClassListFromContainsGenericString(extendsText);
                     if (classNames != null && classNames.size() >= 1 && !"Object".equals(classNames.get(0))) {
                         MyEntity myEntity = new MyEntity();
                         myEntity.setClassName(classNames.get(0));
@@ -211,7 +211,7 @@ public class ClassDetailsParser extends AbstractParser {
                 int indexOfSuperInterface = targetText.indexOf(interfaceTarget);
                 if (indexOfSuperInterface != -1) {
                     String superInterfacesText = targetText.substring(indexOfSuperInterface + interfaceTarget.length());
-                    List<String> classNames = getClassListFromContainsGenericString(superInterfacesText);
+                    List<String> classNames = GenericUtil.getClassListFromContainsGenericString(superInterfacesText);
                     for (String name : classNames) {
                         MyEntity myEntity = new MyEntity();
                         myEntity.setClassName(name);
@@ -238,7 +238,7 @@ public class ClassDetailsParser extends AbstractParser {
             }
         }
         if (classesText != null) {
-            List<String> classNames = getClassListFromContainsGenericString(classesText);
+            List<String> classNames = GenericUtil.getClassListFromContainsGenericString(classesText);
             for (String name : classNames) {
                 MyEntity myEntity = new MyEntity();
                 myEntity.setClassName(name);
@@ -343,7 +343,7 @@ public class ClassDetailsParser extends AbstractParser {
         if (!parametersText.contains(GENERIC_LEFT_MARK)) {
             parameterEntries = Arrays.asList(parametersText.split(","));
         } else {
-            parameterEntries = getClassListFromContainsGenericString(parametersText);
+            parameterEntries = GenericUtil.getClassListFromContainsGenericString(parametersText);
         }
         for (String entry : parameterEntries) {
             int splitIndex = entry.lastIndexOf(' ');
@@ -354,43 +354,6 @@ public class ClassDetailsParser extends AbstractParser {
             }
         }
         return myParameters;
-    }
-
-    /**
-     * @param parametersText parameters string
-     * @return
-     * @testcase - replaceAll(List<T> list, T oldVal, T newVal)
-     * - addAll(Collection<? super T> c, T... elements)
-     * - mapEquivalents(List<Locale.LanguageRange> priorityList, Map<String,List<String>> map)
-     */
-    private List<String> getClassListFromContainsGenericString(String parametersText) {
-        List<String> parameterEntries = new ArrayList<>();
-        int indexBegin = 0;
-        int indexSplit = parametersText.indexOf(',', indexBegin);
-        while (indexSplit != -1) {
-            int indexLeft = parametersText.indexOf('<', indexBegin);
-            int indexLeft2 = indexLeft;
-            int indexRight = parametersText.indexOf('>', indexBegin);
-            if (indexLeft != -1 && indexRight != -1) {
-                while (parametersText.substring(indexLeft2 + 1, indexRight).contains(GENERIC_LEFT_MARK)) {
-                    indexLeft2 = parametersText.indexOf('<', indexLeft2 + 1);
-                    indexRight = parametersText.indexOf('>', indexRight + 1);
-                }
-                if (indexSplit > indexLeft) {
-                    indexSplit = parametersText.indexOf(',', indexRight + 1);
-                    if (indexSplit == -1) {
-                        indexSplit = parametersText.length();
-                    }
-                }
-            }
-            parameterEntries.add(parametersText.substring(indexBegin, indexSplit).trim());
-            indexBegin = indexSplit + 1;
-            indexSplit = parametersText.indexOf(',', indexBegin);
-        }
-        if (indexBegin < parametersText.length() - 1) {
-            parameterEntries.add(parametersText.substring(indexBegin).trim());
-        }
-        return parameterEntries;
     }
 
     private List<MyMethod> getMethodsByElement(Element methodsElement) {

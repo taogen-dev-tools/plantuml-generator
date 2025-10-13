@@ -65,6 +65,7 @@ public abstract class AbstractGenerator implements Generator {
         if (myEntities != null) {
             myEntityVos = new ArrayList<>(myEntities.size());
             for (MyEntity myEntity : myEntities) {
+                logger.debug("Converting MyEntity: {}", myEntity);
                 MyEntityVo myEntityVo = new MyEntityVo();
                 // entity
                 myEntityVo.setClassName(myEntity.getClassName());
