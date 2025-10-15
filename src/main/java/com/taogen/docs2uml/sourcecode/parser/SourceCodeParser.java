@@ -23,6 +23,14 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 public class SourceCodeParser {
+    public static final Map<String, EntityType> STRING_TO_ENTITY_TYPE = new HashMap<>();
+    static {
+        STRING_TO_ENTITY_TYPE.put("public interface", EntityType.INTERFACE);
+        STRING_TO_ENTITY_TYPE.put("public class", EntityType.CLASS);
+        STRING_TO_ENTITY_TYPE.put("public enum", EntityType.ENUM);
+        STRING_TO_ENTITY_TYPE.put("public @interface", EntityType.ANNOTATION);
+        STRING_TO_ENTITY_TYPE.put("public abstract class", EntityType.ABSTRACT);
+    }
     public static final Pattern PACKAGE_PATTERN = Pattern.compile("package\\s+(([a-zA-Z0-9$_]+\\.?)+);");
     //    public static final Pattern PACKAGE_PATTERN = Pattern.compile("package\\s+((\\w\\.?)+);");
     // public static final Pattern CLASS_NAME_PATTERN = Pattern.compile("public(\\s+abstract)?\\s+(class|interface|@interface|enum)\\s+((.+?)(<.+?>)?)(\\s+(extends|implements)\\s+((.+?)(<.+?>)?))?(\\s+(extends|implements)\\s+((.+?)(<.+?>)?))?\\s*\\{");
@@ -63,30 +71,13 @@ public class SourceCodeParser {
             String sourceCodeStr = br.lines().map(SourceCodeUtil::removeComments).collect(Collectors.joining(System.lineSeparator()));
 //            log.debug(sourceCodeStr);
             // type
-            Map<String, EntityType> stringToEntityType = new HashMap<>();
-            stringToEntityType.put("public interface", EntityType.INTERFACE);
-            stringToEntityType.put("public class", EntityType.CLASS);
-            stringToEntityType.put("public enum", EntityType.ENUM);
-            stringToEntityType.put("public @interface", EntityType.ANNOTATION);
-            stringToEntityType.put("public abstract class", EntityType.ABSTRACT);
-            for (String key : stringToEntityType.keySet()) {
-                if (sourceCodeStr.contains(key)) {
-                    entity.setType(stringToEntityType.get(key));
-                }
-            }
+            entity.setType(getEntityType(sourceCodeStr));
             if (entity.getType() == null) {
                 log.warn("No entity type found for file {}", filePath);
                 return null;
             }
             // package name
-            Matcher packageMatcher = PACKAGE_PATTERN.matcher(sourceCodeStr);
-            if (packageMatcher.find()) {
-                entity.setPackageName(packageMatcher.group(1));
-                log.debug("match: {}", packageMatcher.group());
-                for (int i = 1; i < packageMatcher.groupCount(); i++) {
-                    log.trace("group {}: {}", i, packageMatcher.group(i));
-                }
-            }
+            entity.setPackageName(getPackageName(sourceCodeStr));
             // is abstract
             entity.setIsAbstract(EntityType.ABSTRACT.equals(entity.getType()));
             // class name
@@ -97,12 +88,13 @@ public class SourceCodeParser {
                     log.trace("group {}: {}", i, classNameMatcher.group(i));
                 }
                 entity.setClassName(classNameMatcher.group(CLASS_NAME_GROUP));
+                String[] lines = sourceCodeStr.split("\n");
                 // parent class and interfaces
                 if (classNameMatcher.group(FIRST_PARENT_OR_INTERFACE) != null) {
-                    setParentClassOrInterfaces(sourceCodeStr, entity, classNameMatcher, FIRST_PARENT_OR_INTERFACE);
+                    setParentClassOrInterfaces(lines, entity, classNameMatcher, FIRST_PARENT_OR_INTERFACE);
                 }
                 if (classNameMatcher.group(SECOND_PARENT_OR_INTERFACE) != null) {
-                    setParentClassOrInterfaces(sourceCodeStr, entity, classNameMatcher, SECOND_PARENT_OR_INTERFACE);
+                    setParentClassOrInterfaces(lines, entity, classNameMatcher, SECOND_PARENT_OR_INTERFACE);
                 }
             } else {
                 log.warn("Cannot parse file {}", filePath);
@@ -119,10 +111,31 @@ public class SourceCodeParser {
         return entity;
     }
 
-    private void setParentClassOrInterfaces(String sourceCodeStr, MyEntity entity, Matcher classNameMatcher, int keywordGroup) {
+    private EntityType getEntityType(String sourceCodeStr) {
+        for (Map.Entry<String, EntityType> entry : STRING_TO_ENTITY_TYPE.entrySet()) {
+            if (sourceCodeStr.contains(entry.getKey())) {
+                return entry.getValue();
+            }
+        }
+        return null;
+    }
+
+    private String getPackageName(String sourceCodeStr) {
+        Matcher packageMatcher = PACKAGE_PATTERN.matcher(sourceCodeStr);
+        if (packageMatcher.find()) {
+            log.debug("match: {}", packageMatcher.group());
+            for (int i = 1; i < packageMatcher.groupCount(); i++) {
+                log.trace("group {}: {}", i, packageMatcher.group(i));
+            }
+            return packageMatcher.group(1);
+        } else {
+            return null;
+        }
+    }
+
+    private void setParentClassOrInterfaces(String[] lines, MyEntity entity, Matcher classNameMatcher, int keywordGroup) {
         String stringValue = classNameMatcher.group(keywordGroup + 1).trim();
         log.debug("stringValue: {}", stringValue);
-        String[] lines = sourceCodeStr.split("\n");
         if ("extends".equals(classNameMatcher.group(keywordGroup)) &&
                 !EntityType.INTERFACE.equals(entity.getType())) {
             MyEntity parentClass = new MyEntity();
