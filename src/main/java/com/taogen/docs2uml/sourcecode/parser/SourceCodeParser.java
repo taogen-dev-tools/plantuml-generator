@@ -150,7 +150,7 @@ public class SourceCodeParser {
             parentClass.setClassName(stringValue);
             parentClass.setClassNameWithoutGeneric(GenericUtil.removeGeneric(parentClass.getClassName()));
             for (int i = 1; i < lines.length; i++) {
-                if (lines[i].contains("." + parentClass.getClassNameWithoutGeneric())) {
+                if (lines[i].contains("." + parentClass.getClassNameWithoutGeneric() + ";")) {
                     parentClass.setPackageName(lines[i].substring(lines[i].indexOf("import ") + "import ".length(), lines[i].indexOf(parentClass.getClassNameWithoutGeneric()) - 1));
                 }
             }
@@ -167,7 +167,7 @@ public class SourceCodeParser {
                         parentInterface.setClassName(name);
                         parentInterface.setClassNameWithoutGeneric(GenericUtil.removeGeneric(parentInterface.getClassName()));
                         for (int i = 1; i < lines.length; i++) {
-                            if (lines[i].contains("." + parentInterface.getClassNameWithoutGeneric())) {
+                            if (lines[i].contains("." + parentInterface.getClassNameWithoutGeneric() + ";")) {
                                 parentInterface.setPackageName(lines[i].substring(lines[i].indexOf("import ") + "import ".length(), lines[i].indexOf(parentInterface.getClassNameWithoutGeneric()) - 1));
                             }
                         }

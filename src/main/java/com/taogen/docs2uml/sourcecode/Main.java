@@ -32,7 +32,8 @@ public class Main {
         String rootDirPath = "/Users/taogen/var/cs/repositories/personal/dev/taogen-code-source-learning/spring-framework";
         commandOption.setRootDirPath(rootDirPath);
         // scan files
-        List<String> filePaths = scanFiles(commandOption.getRootDirPath());
+        Predicate<Path> matchPredicate = FilePathScanner.getSpringFrameworkMatchPredicate();
+        List<String> filePaths = scanFiles(commandOption.getRootDirPath(), matchPredicate);
         // parse files to myEntities
         List<MyEntity> myEntities = parseFilesToMyEntities(filePaths);
         // filter myEntities for the specified class
@@ -42,9 +43,8 @@ public class Main {
         log.info("Elapsed time: {} ms", System.currentTimeMillis() - start);
     }
 
-    private static List<String> scanFiles(String rootDirPath) throws IOException {
+    private static List<String> scanFiles(String rootDirPath, Predicate<Path> matchPredicate) throws IOException {
         Scanner scanner = new FilePathScanner();
-        Predicate<Path> matchPredicate = FilePathScanner.getSpringFrameworkMatchPredicate();
         List<String> filePaths = scanner.scan(rootDirPath, matchPredicate);
         log.debug("filePaths: {}", filePaths.stream()
 //                .map(filePath -> filePath.substring(rootDirPath.length()))
