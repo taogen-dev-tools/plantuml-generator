@@ -26,7 +26,7 @@ public class Main {
     public static void main(String[] args) throws IOException {
         CommandOption commandOption = new CommandOption();
         commandOption.setPackageName("org.springframework");
-        commandOption.setTopPackageName("com.taogen.docs2uml");
+        commandOption.setTopPackageName("org.springframework");
         commandOption.setSpecifiedClass("org.springframework.beans.factory.BeanFactory");
         // scan
         Scanner scanner = new FilePathScanner();
