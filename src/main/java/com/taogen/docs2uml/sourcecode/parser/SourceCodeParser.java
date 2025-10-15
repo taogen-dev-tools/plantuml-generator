@@ -78,6 +78,9 @@ public class SourceCodeParser {
             }
             // package name
             entity.setPackageName(getPackageName(sourceCodeStr));
+            if (entity.getPackageName() == null) {
+                log.warn("No package name found for file {}", filePath);
+            }
             // is abstract
             entity.setIsAbstract(EntityType.ABSTRACT.equals(entity.getType()));
             // class name
