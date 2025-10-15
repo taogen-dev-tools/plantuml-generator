@@ -24,6 +24,7 @@ import java.util.stream.Collectors;
 @Slf4j
 public class SourceCodeParser {
     public static final Map<String, EntityType> STRING_TO_ENTITY_TYPE = new HashMap<>();
+
     static {
         STRING_TO_ENTITY_TYPE.put("public interface", EntityType.INTERFACE);
         STRING_TO_ENTITY_TYPE.put("public class", EntityType.CLASS);
@@ -31,6 +32,7 @@ public class SourceCodeParser {
         STRING_TO_ENTITY_TYPE.put("public @interface", EntityType.ANNOTATION);
         STRING_TO_ENTITY_TYPE.put("public abstract class", EntityType.ABSTRACT);
     }
+
     public static final Pattern PACKAGE_PATTERN = Pattern.compile("package\\s+(([a-zA-Z0-9$_]+\\.?)+);");
     //    public static final Pattern PACKAGE_PATTERN = Pattern.compile("package\\s+((\\w\\.?)+);");
     // public static final Pattern CLASS_NAME_PATTERN = Pattern.compile("public(\\s+abstract)?\\s+(class|interface|@interface|enum)\\s+((.+?)(<.+?>)?)(\\s+(extends|implements)\\s+((.+?)(<.+?>)?))?(\\s+(extends|implements)\\s+((.+?)(<.+?>)?))?\\s*\\{");
@@ -68,8 +70,11 @@ public class SourceCodeParser {
         entity.setUrl(filePath);
         try (FileReader fr = new FileReader(filePath);
              BufferedReader br = new BufferedReader(fr)) {
-            String sourceCodeStr = br.lines().map(SourceCodeUtil::removeComments).collect(Collectors.joining(System.lineSeparator()));
-//            log.debug(sourceCodeStr);
+            String sourceCodeStr = br.lines()
+                    .map(SourceCodeUtil::removeComments)
+                    .filter(item -> item != null && !item.trim().isEmpty())
+                    .collect(Collectors.joining(System.lineSeparator()));
+//            log.debug("sourceCodeStr:\n{}", sourceCodeStr);
             // type
             entity.setType(getEntityType(sourceCodeStr));
             if (entity.getType() == null) {
