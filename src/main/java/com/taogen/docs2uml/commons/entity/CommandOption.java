@@ -8,6 +8,7 @@ import lombok.Data;
 @Data
 public class CommandOption {
     private String url;
+    private String rootDirPath;
     // TODO: update doc, pacakge -> pacakgeName
     private String topPackageName;
     private String packageName;
