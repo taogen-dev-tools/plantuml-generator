@@ -80,7 +80,7 @@ public class Main {
     }
 
     private static List<MyEntity> filterMyEntitiesForSpecifiedClass(List<MyEntity> myEntities, CommandOption commandOption) {
-        if (commandOption.getSpecifiedClass() == null && commandOption.getSpecifiedClass().isEmpty()) {
+        if (commandOption.getSpecifiedClass() == null || commandOption.getSpecifiedClass().isEmpty()) {
             return new ArrayList<>();
         }
         Map<String, MyEntity> classPathToEntity = myEntities.stream()
