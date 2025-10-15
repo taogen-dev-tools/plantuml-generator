@@ -12,8 +12,8 @@ import lombok.extern.slf4j.Slf4j;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -24,8 +24,12 @@ import java.util.stream.Collectors;
 @Slf4j
 public class Main {
     public static void main(String[] args) throws IOException {
+        CommandOption commandOption = new CommandOption();
+        commandOption.setPackageName("org.springframework");
+        commandOption.setTopPackageName("com.taogen.docs2uml");
+        commandOption.setSpecifiedClass("org.springframework.beans.factory.BeanFactory");
+        // scan
         Scanner scanner = new FilePathScanner();
-        SourceCodeParser parser = new SourceCodeParser();
         String rootDirPath = "/Users/taogen/var/cs/repositories/personal/dev/taogen-code-source-learning/spring-framework";
         Predicate<Path> matchPredicate = FilePathScanner.getSpringFrameworkMatchPredicate();
         List<String> filePaths = scanner.scan(rootDirPath, matchPredicate);
@@ -33,6 +37,8 @@ public class Main {
 //                .map(filePath -> filePath.substring(rootDirPath.length()))
                 .collect(Collectors.joining("\n")));
         System.out.println(filePaths.size());
+        // parse
+        SourceCodeParser parser = new SourceCodeParser();
         List<MyEntity> myEntities = filePaths.stream()
                 .map(filePath -> {
                     try {
@@ -43,16 +49,123 @@ public class Main {
                 })
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
+        writeMyEntityToFile(myEntities, "myEntities.txt");
+        log.debug("myEntities size: {}", myEntities.size());
+        // filter
+        List<MyEntity> newEntities = new ArrayList<>();
+        if (commandOption.getSpecifiedClass() != null && !commandOption.getSpecifiedClass().isEmpty()) {
+            Map<String, MyEntity> classPathToEntity = myEntities.stream()
+                    .collect(Collectors.toMap(myEntity -> myEntity.getPackageName() + "." + myEntity.getClassNameWithoutGeneric(), Function.identity()));
+            MyEntity root = classPathToEntity.get(commandOption.getSpecifiedClass());
+            if (root != null) {
+                // link
+                for (MyEntity myEntity : myEntities) {
+                    log.debug("To link myEntity: {}", myEntity);
+                    MyEntity parentClass = myEntity.getParentClass();
+                    if (parentClass != null) {
+                        String parentClassPath = parentClass.getPackageName() + "." + parentClass.getClassNameWithoutGeneric();
+                        log.debug("Parent class path: {}", parentClassPath);
+                        MyEntity parentClassInMap = classPathToEntity.get(parentClassPath);
+                        // add current entity to the parent class's subclass list
+                        if (parentClassInMap != null) {
+//                            myEntity.setParentClass(parentClassInMap);
+                            List<MyEntity> subClasses = parentClassInMap.getSubClasses();
+                            if (subClasses == null) {
+                                subClasses = new ArrayList<>();
+                                parentClassInMap.setSubClasses(subClasses);
+                            }
+                            if (!subClasses.contains(myEntity)) {
+                                subClasses.add(myEntity);
+                            }
+                        }
+                    }
+                    // add current entity to the parent interface's subinterface list
+                    if (myEntity.getParentInterfaces() != null && !myEntity.getParentInterfaces().isEmpty()) {
+//                        List<MyEntity> toRemoveParentInterfaces = new ArrayList<>();
+//                        List<MyEntity> toAddParentInterfaces = new ArrayList<>();
+                        for (MyEntity parentInterfaceEntity : myEntity.getParentInterfaces()) {
+                            MyEntity parentInterfaceInMap = classPathToEntity.get(parentInterfaceEntity.getPackageName() + "." + parentInterfaceEntity.getClassNameWithoutGeneric());
+                            if (parentInterfaceInMap != null) {
+//                                toAddParentInterfaces.add(parentInterfaceInMap);
+//                                toRemoveParentInterfaces.add(parentInterfaceEntity);
+                                List<MyEntity> subInterfaces = parentInterfaceInMap.getSubInterfaces();
+                                if (subInterfaces == null) {
+                                    subInterfaces = new ArrayList<>();
+                                    parentInterfaceInMap.setSubInterfaces(subInterfaces);
+                                }
+                                if (!subInterfaces.contains(myEntity)) {
+                                    subInterfaces.add(myEntity);
+                                }
+                            }
+                        }
+//                        myEntity.getParentInterfaces().addAll(toAddParentInterfaces);
+//                        myEntity.getParentInterfaces().removeAll(toRemoveParentInterfaces);
+                    }
+                }
+                writeMyEntityToFile(myEntities, "myEntities-linked.txt");
+                log.debug("myEntities size: {}", myEntities.size());
+                // traverse (To get specified class graph)
+                Queue<MyEntity> queue = new LinkedList<>();
+                queue.add(root);
+                root.setVisited(true);
+                while (!queue.isEmpty()) {
+                    MyEntity current = queue.poll();
+                    MyEntity myEntity = classPathToEntity.get(current.getPackageName() + "." + current.getClassNameWithoutGeneric());
+                    if (myEntity != null && !newEntities.contains(myEntity)) {
+                        newEntities.add(myEntity);
+                    }
+                    MyEntity parentClass = current.getParentClass();
+                    if (parentClass != null && !parentClass.getVisited()) {
+                        queue.add(parentClass);
+                        parentClass.setVisited(true);
+                    }
+                    List<MyEntity> parentInterfaces = current.getParentInterfaces();
+                    if (parentInterfaces != null && !parentInterfaces.isEmpty()) {
+                        for (MyEntity parentInterface : parentInterfaces) {
+                            if (!parentInterface.getVisited()) {
+                                queue.add(parentInterface);
+                                parentInterface.setVisited(true);
+                            }
+                        }
+                    }
+                    List<MyEntity> subClasses = current.getSubClasses();
+                    if (subClasses != null && !subClasses.isEmpty()) {
+                        for (MyEntity subClass : subClasses) {
+                            if (!subClass.getVisited()) {
+                                queue.add(subClass);
+                                subClass.setVisited(true);
+                            }
+                        }
+                    }
+                    List<MyEntity> subInterfaces = current.getSubInterfaces();
+                    if (subInterfaces != null && !subInterfaces.isEmpty()) {
+                        for (MyEntity subInterface : subInterfaces) {
+                            if (!subInterface.getVisited()) {
+                                queue.add(subInterface);
+                                subInterface.setVisited(true);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        writeMyEntityToFile(newEntities, "myEntities-new.txt");
+        log.debug("newEntities size: {}", newEntities.size());
+        // generate
+        Generator generator = new ClassDiagramGenerator();
+        if (commandOption.getSpecifiedClass() != null) {
+            generator.generate(newEntities, commandOption);
+        } else {
+            generator.generate(myEntities, commandOption);
+        }
+    }
+
+    private static void writeMyEntityToFile(List<MyEntity> myEntities, String file) throws IOException {
         String myEntitiesString = myEntities.stream()
                 .map(MyEntity::toString)
                 .collect(Collectors.joining("\n"));
-        FileWriter fw = new FileWriter("myEntities.txt");
+        FileWriter fw = new FileWriter(file);
         fw.write(myEntitiesString);
         fw.close();
-        Generator generator = new ClassDiagramGenerator();
-        CommandOption commandOption = new CommandOption();
-        commandOption.setPackageName("org.springframework");
-        commandOption.setTopPackageName("com.taogen.docs2uml");
-        generator.generate(myEntities, commandOption);
     }
 }

@@ -4,6 +4,7 @@ import com.taogen.docs2uml.commons.constant.EntityType;
 import com.taogen.docs2uml.commons.entity.CommandOption;
 import com.taogen.docs2uml.commons.entity.MyEntity;
 import com.taogen.docs2uml.commons.util.GenericUtil;
+import com.taogen.docs2uml.commons.util.SourceCodeUtil;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.BufferedReader;
@@ -22,7 +23,8 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 public class SourceCodeParser {
-    public static final Pattern PACKAGE_PATTERN = Pattern.compile("package\\s+((\\w\\.?)+);");
+    public static final Pattern PACKAGE_PATTERN = Pattern.compile("package\\s+(([a-zA-Z0-9$_]+\\.?)+);");
+    //    public static final Pattern PACKAGE_PATTERN = Pattern.compile("package\\s+((\\w\\.?)+);");
     // public static final Pattern CLASS_NAME_PATTERN = Pattern.compile("public(\\s+abstract)?\\s+(class|interface|@interface|enum)\\s+((.+?)(<.+?>)?)(\\s+(extends|implements)\\s+((.+?)(<.+?>)?))?(\\s+(extends|implements)\\s+((.+?)(<.+?>)?))?\\s*\\{");
     public static final String CLASS_NAME_PATTERN_STR = "(class|interface|@interface|enum)\\s+((.+?)(<.+?>)?)";
     public static final String PARENT_CLASS_OR_INTERFACES_PATTERN_STR = "(\\s+(extends|implements)\\s+(((.|[\\n])+?)(<.+?>)?))?";
@@ -55,10 +57,11 @@ public class SourceCodeParser {
     public MyEntity parse(String filePath, CommandOption commandOption) throws IOException {
         log.debug("Parsing file {}", filePath);
         MyEntity entity = new MyEntity();
+        entity.setUrl(filePath);
         try (FileReader fr = new FileReader(filePath);
              BufferedReader br = new BufferedReader(fr)) {
-            String s = br.lines().map(str -> str.replaceAll("//.*", "")).collect(Collectors.joining(System.lineSeparator()));
-//            log.debug(s);
+            String sourceCodeStr = br.lines().map(SourceCodeUtil::removeComments).collect(Collectors.joining(System.lineSeparator()));
+//            log.debug(sourceCodeStr);
             // type
             Map<String, EntityType> stringToEntityType = new HashMap<>();
             stringToEntityType.put("public interface", EntityType.INTERFACE);
@@ -67,7 +70,7 @@ public class SourceCodeParser {
             stringToEntityType.put("public @interface", EntityType.ANNOTATION);
             stringToEntityType.put("public abstract class", EntityType.ABSTRACT);
             for (String key : stringToEntityType.keySet()) {
-                if (s.contains(key)) {
+                if (sourceCodeStr.contains(key)) {
                     entity.setType(stringToEntityType.get(key));
                 }
             }
@@ -76,7 +79,7 @@ public class SourceCodeParser {
                 return null;
             }
             // package name
-            Matcher packageMatcher = PACKAGE_PATTERN.matcher(s);
+            Matcher packageMatcher = PACKAGE_PATTERN.matcher(sourceCodeStr);
             if (packageMatcher.find()) {
                 entity.setPackageName(packageMatcher.group(1));
                 log.debug(packageMatcher.group());
@@ -87,7 +90,7 @@ public class SourceCodeParser {
             // is abstract
             entity.setIsAbstract(EntityType.ABSTRACT.equals(entity.getType()));
             // class name
-            Matcher classNameMatcher = CLASS_NAME_PATTERN.matcher(s);
+            Matcher classNameMatcher = CLASS_NAME_PATTERN.matcher(sourceCodeStr);
             if (classNameMatcher.find()) {
                 log.debug("match: {}", classNameMatcher.group());
                 for (int i = 1; i <= classNameMatcher.groupCount(); i++) {
@@ -96,10 +99,10 @@ public class SourceCodeParser {
                 entity.setClassName(classNameMatcher.group(CLASS_NAME_GROUP));
                 // parent class and interfaces
                 if (classNameMatcher.group(FIRST_PARENT_OR_INTERFACE) != null) {
-                    setParentClassOrInterfaces(entity, classNameMatcher, FIRST_PARENT_OR_INTERFACE);
+                    setParentClassOrInterfaces(sourceCodeStr, entity, classNameMatcher, FIRST_PARENT_OR_INTERFACE);
                 }
                 if (classNameMatcher.group(SECOND_PARENT_OR_INTERFACE) != null) {
-                    setParentClassOrInterfaces(entity, classNameMatcher, SECOND_PARENT_OR_INTERFACE);
+                    setParentClassOrInterfaces(sourceCodeStr, entity, classNameMatcher, SECOND_PARENT_OR_INTERFACE);
                 }
             } else {
                 log.warn("Cannot parse file {}", filePath);
@@ -115,14 +118,23 @@ public class SourceCodeParser {
         return entity;
     }
 
-    private void setParentClassOrInterfaces(MyEntity entity, Matcher classNameMatcher, int keywordGroup) {
+    private void setParentClassOrInterfaces(String sourceCodeStr, MyEntity entity, Matcher classNameMatcher, int keywordGroup) {
         String stringValue = classNameMatcher.group(keywordGroup + 1).trim();
         log.debug("stringValue: {}", stringValue);
+        String[] lines = sourceCodeStr.split("\n");
         if ("extends".equals(classNameMatcher.group(keywordGroup)) &&
                 !EntityType.INTERFACE.equals(entity.getType())) {
             MyEntity parentClass = new MyEntity();
             parentClass.setClassName(stringValue);
             parentClass.setClassNameWithoutGeneric(GenericUtil.removeGeneric(parentClass.getClassName()));
+            for (int i = 1; i < lines.length; i++) {
+                if (lines[i].contains("." + parentClass.getClassNameWithoutGeneric())) {
+                    parentClass.setPackageName(lines[i].substring(lines[i].indexOf("import ") + "import ".length(), lines[i].indexOf(parentClass.getClassNameWithoutGeneric()) - 1));
+                }
+            }
+            if (parentClass.getPackageName() == null) {
+                parentClass.setPackageName(entity.getPackageName());
+            }
             entity.setParentClass(parentClass);
         } else {
             List<MyEntity> parentInterfaces = GenericUtil.getClassListFromContainsGenericString(stringValue).stream()
@@ -131,6 +143,14 @@ public class SourceCodeParser {
                         MyEntity parentInterface = new MyEntity();
                         parentInterface.setClassName(name);
                         parentInterface.setClassNameWithoutGeneric(GenericUtil.removeGeneric(parentInterface.getClassName()));
+                        for (int i = 1; i < lines.length; i++) {
+                            if (lines[i].contains("." + parentInterface.getClassNameWithoutGeneric())) {
+                                parentInterface.setPackageName(lines[i].substring(lines[i].indexOf("import ") + "import ".length(), lines[i].indexOf(parentInterface.getClassNameWithoutGeneric()) - 1));
+                            }
+                        }
+                        if (parentInterface.getPackageName() == null) {
+                            parentInterface.setPackageName(entity.getPackageName());
+                        }
                         return parentInterface;
                     })
                     .collect(Collectors.toList());
