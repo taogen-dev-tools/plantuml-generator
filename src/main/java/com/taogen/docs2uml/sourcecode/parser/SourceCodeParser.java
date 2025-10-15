@@ -25,7 +25,7 @@ public class SourceCodeParser {
     public static final Pattern PACKAGE_PATTERN = Pattern.compile("package\\s+((\\w\\.?)+);");
     // public static final Pattern CLASS_NAME_PATTERN = Pattern.compile("public(\\s+abstract)?\\s+(class|interface|@interface|enum)\\s+((.+?)(<.+?>)?)(\\s+(extends|implements)\\s+((.+?)(<.+?>)?))?(\\s+(extends|implements)\\s+((.+?)(<.+?>)?))?\\s*\\{");
     public static final String CLASS_NAME_PATTERN_STR = "(class|interface|@interface|enum)\\s+((.+?)(<.+?>)?)";
-    public static final String PARENT_CLASS_OR_INTERFACES_PATTERN_STR = "(\\s+(extends|implements)\\s+((.+?)(<.+?>)?))?";
+    public static final String PARENT_CLASS_OR_INTERFACES_PATTERN_STR = "(\\s+(extends|implements)\\s+(((.|[\\n])+?)(<.+?>)?))?";
     //    public static final String PARENT_CLASS_OR_INTERFACES = "(\\s+(extends|implements)\\s+(([.\t\n]+?)(<.+?>)?))?";
     public static final Pattern CLASS_NAME_PATTERN = Pattern.compile(
             "public(\\s+abstract)?\\s+" +
@@ -35,7 +35,7 @@ public class SourceCodeParser {
                     "\\s+\\{"); // Pattern.DOTALL
     public static final int CLASS_NAME_GROUP = 4;
     public static final int FIRST_PARENT_OR_INTERFACE = 7;
-    public static final int SECOND_PARENT_OR_INTERFACE = 12;
+    public static final int SECOND_PARENT_OR_INTERFACE = 13;
 
     public static void main(String[] args) throws IOException {
         SourceCodeParser sourceCodeParser = new SourceCodeParser();
@@ -58,7 +58,7 @@ public class SourceCodeParser {
         try (FileReader fr = new FileReader(filePath);
              BufferedReader br = new BufferedReader(fr)) {
             String s = br.lines().map(str -> str.replaceAll("//.*", "")).collect(Collectors.joining(System.lineSeparator()));
-            log.debug(s);
+//            log.debug(s);
             // type
             Map<String, EntityType> stringToEntityType = new HashMap<>();
             stringToEntityType.put("public interface", EntityType.INTERFACE);
@@ -70,6 +70,10 @@ public class SourceCodeParser {
                 if (s.contains(key)) {
                     entity.setType(stringToEntityType.get(key));
                 }
+            }
+            if (entity.getType() == null) {
+                log.warn("No entity type found for file {}", filePath);
+                return null;
             }
             // package name
             Matcher packageMatcher = PACKAGE_PATTERN.matcher(s);
