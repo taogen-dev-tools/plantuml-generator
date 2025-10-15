@@ -11,6 +11,10 @@ import java.util.List;
 @Data
 // TODO: update doc. Add new fields.
 public class MyEntity {
+    /**
+     * id: class path
+     */
+    private String id;
     private EntityType type;
     // TODO: update doc package -> packageName
     private String packageName;

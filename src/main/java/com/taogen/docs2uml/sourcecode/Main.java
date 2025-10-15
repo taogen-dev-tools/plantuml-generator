@@ -55,7 +55,7 @@ public class Main {
         List<MyEntity> newEntities = new ArrayList<>();
         if (commandOption.getSpecifiedClass() != null && !commandOption.getSpecifiedClass().isEmpty()) {
             Map<String, MyEntity> classPathToEntity = myEntities.stream()
-                    .collect(Collectors.toMap(myEntity -> myEntity.getPackageName() + "." + myEntity.getClassNameWithoutGeneric(), Function.identity()));
+                    .collect(Collectors.toMap(myEntity -> myEntity.getId(), Function.identity()));
             MyEntity root = classPathToEntity.get(commandOption.getSpecifiedClass());
             if (root != null) {
                 // link
@@ -63,12 +63,12 @@ public class Main {
                     log.debug("To link myEntity: {}", myEntity);
                     MyEntity parentClass = myEntity.getParentClass();
                     if (parentClass != null) {
-                        String parentClassPath = parentClass.getPackageName() + "." + parentClass.getClassNameWithoutGeneric();
-                        log.debug("Parent class path: {}", parentClassPath);
-                        MyEntity parentClassInMap = classPathToEntity.get(parentClassPath);
-                        // add current entity to the parent class's subclass list
+                        log.debug("Parent class path: {}", parentClass.getId());
+                        MyEntity parentClassInMap = classPathToEntity.get(parentClass.getId());
+                        // Link subclasses: add current entity to the parent class's subclass list
                         if (parentClassInMap != null) {
-//                            myEntity.setParentClass(parentClassInMap);
+                            // Link parentClass
+                            myEntity.setParentClass(parentClassInMap);
                             List<MyEntity> subClasses = parentClassInMap.getSubClasses();
                             if (subClasses == null) {
                                 subClasses = new ArrayList<>();
@@ -79,13 +79,15 @@ public class Main {
                             }
                         }
                     }
-                    // add current entity to the parent interface's subinterface list
+                    // Link subinterfaces: add current entity to the parent interface's subinterface list
                     if (myEntity.getParentInterfaces() != null && !myEntity.getParentInterfaces().isEmpty()) {
+                        // Link parentInterfaces (Not a good choice. Too many top interfaces cause too many classes)
 //                        List<MyEntity> toRemoveParentInterfaces = new ArrayList<>();
 //                        List<MyEntity> toAddParentInterfaces = new ArrayList<>();
                         for (MyEntity parentInterfaceEntity : myEntity.getParentInterfaces()) {
-                            MyEntity parentInterfaceInMap = classPathToEntity.get(parentInterfaceEntity.getPackageName() + "." + parentInterfaceEntity.getClassNameWithoutGeneric());
+                            MyEntity parentInterfaceInMap = classPathToEntity.get(parentInterfaceEntity.getId());
                             if (parentInterfaceInMap != null) {
+                                // Link parentInterfaces (Not a good choice. Too many top interfaces cause too many classes)
 //                                toAddParentInterfaces.add(parentInterfaceInMap);
 //                                toRemoveParentInterfaces.add(parentInterfaceEntity);
                                 List<MyEntity> subInterfaces = parentInterfaceInMap.getSubInterfaces();
@@ -98,11 +100,12 @@ public class Main {
                                 }
                             }
                         }
+                        // Link parentInterfaces (Not a good choice. Too many top interfaces cause too many classes)
 //                        myEntity.getParentInterfaces().addAll(toAddParentInterfaces);
 //                        myEntity.getParentInterfaces().removeAll(toRemoveParentInterfaces);
                     }
                 }
-                writeMyEntityToFile(myEntities, "myEntities-linked.txt");
+//                writeMyEntityToFile(myEntities, "myEntities-linked.txt");
                 log.debug("myEntities size: {}", myEntities.size());
                 // traverse (To get specified class graph)
                 Queue<MyEntity> queue = new LinkedList<>();
@@ -110,9 +113,9 @@ public class Main {
                 root.setVisited(true);
                 while (!queue.isEmpty()) {
                     MyEntity current = queue.poll();
-                    MyEntity myEntity = classPathToEntity.get(current.getPackageName() + "." + current.getClassNameWithoutGeneric());
-                    if (myEntity != null && !newEntities.contains(myEntity)) {
-                        newEntities.add(myEntity);
+                    MyEntity myEntityInMap = classPathToEntity.get(current.getId());
+                    if (myEntityInMap != null && !newEntities.contains(myEntityInMap)) {
+                        newEntities.add(myEntityInMap);
                     }
                     MyEntity parentClass = current.getParentClass();
                     if (parentClass != null && !parentClass.getVisited()) {
@@ -149,7 +152,7 @@ public class Main {
                 }
             }
         }
-        writeMyEntityToFile(newEntities, "myEntities-new.txt");
+//        writeMyEntityToFile(newEntities, "myEntities-new.txt");
         log.debug("newEntities size: {}", newEntities.size());
         // generate
         Generator generator = new ClassDiagramGenerator();

@@ -109,6 +109,7 @@ public class SourceCodeParser {
                 return null;
             }
             entity.setClassNameWithoutGeneric(GenericUtil.removeGeneric(entity.getClassName()));
+            entity.setId(entity.getPackageName() + "." + entity.getClassNameWithoutGeneric());
             // fields
             // methods
             // subClasses
@@ -135,6 +136,7 @@ public class SourceCodeParser {
             if (parentClass.getPackageName() == null) {
                 parentClass.setPackageName(entity.getPackageName());
             }
+            parentClass.setId(parentClass.getPackageName() + "." + parentClass.getClassNameWithoutGeneric());
             entity.setParentClass(parentClass);
         } else {
             List<MyEntity> parentInterfaces = GenericUtil.getClassListFromContainsGenericString(stringValue).stream()
@@ -151,6 +153,7 @@ public class SourceCodeParser {
                         if (parentInterface.getPackageName() == null) {
                             parentInterface.setPackageName(entity.getPackageName());
                         }
+                        parentInterface.setId(parentInterface.getPackageName() + "." + parentInterface.getClassNameWithoutGeneric());
                         return parentInterface;
                     })
                     .collect(Collectors.toList());
