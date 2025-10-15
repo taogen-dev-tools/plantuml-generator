@@ -28,5 +28,5 @@ public class MyEntity {
     private List<MyMethod> methods;
     private List<MyEntity> subClasses;
     private List<MyEntity> subInterfaces;
-    private Boolean visited = false;
+    private boolean visited = false;
 }

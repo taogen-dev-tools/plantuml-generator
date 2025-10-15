@@ -33,10 +33,10 @@ public class Main {
         String rootDirPath = "/Users/taogen/var/cs/repositories/personal/dev/taogen-code-source-learning/spring-framework";
         Predicate<Path> matchPredicate = FilePathScanner.getSpringFrameworkMatchPredicate();
         List<String> filePaths = scanner.scan(rootDirPath, matchPredicate);
-        System.out.println(filePaths.stream()
+        log.debug("filePaths: {}", filePaths.stream()
 //                .map(filePath -> filePath.substring(rootDirPath.length()))
                 .collect(Collectors.joining("\n")));
-        System.out.println(filePaths.size());
+        log.debug("filePath Size: {}", filePaths.size());
         // parse
         SourceCodeParser parser = new SourceCodeParser();
         List<MyEntity> myEntities = filePaths.stream()
@@ -55,7 +55,7 @@ public class Main {
         List<MyEntity> newEntities = new ArrayList<>();
         if (commandOption.getSpecifiedClass() != null && !commandOption.getSpecifiedClass().isEmpty()) {
             Map<String, MyEntity> classPathToEntity = myEntities.stream()
-                    .collect(Collectors.toMap(myEntity -> myEntity.getId(), Function.identity()));
+                    .collect(Collectors.toMap(MyEntity::getId, Function.identity()));
             MyEntity root = classPathToEntity.get(commandOption.getSpecifiedClass());
             if (root != null) {
                 // link
@@ -118,14 +118,14 @@ public class Main {
                         newEntities.add(myEntityInMap);
                     }
                     MyEntity parentClass = current.getParentClass();
-                    if (parentClass != null && !parentClass.getVisited()) {
+                    if (parentClass != null && !parentClass.isVisited()) {
                         queue.add(parentClass);
                         parentClass.setVisited(true);
                     }
                     List<MyEntity> parentInterfaces = current.getParentInterfaces();
                     if (parentInterfaces != null && !parentInterfaces.isEmpty()) {
                         for (MyEntity parentInterface : parentInterfaces) {
-                            if (!parentInterface.getVisited()) {
+                            if (!parentInterface.isVisited()) {
                                 queue.add(parentInterface);
                                 parentInterface.setVisited(true);
                             }
@@ -134,7 +134,7 @@ public class Main {
                     List<MyEntity> subClasses = current.getSubClasses();
                     if (subClasses != null && !subClasses.isEmpty()) {
                         for (MyEntity subClass : subClasses) {
-                            if (!subClass.getVisited()) {
+                            if (!subClass.isVisited()) {
                                 queue.add(subClass);
                                 subClass.setVisited(true);
                             }
@@ -143,7 +143,7 @@ public class Main {
                     List<MyEntity> subInterfaces = current.getSubInterfaces();
                     if (subInterfaces != null && !subInterfaces.isEmpty()) {
                         for (MyEntity subInterface : subInterfaces) {
-                            if (!subInterface.getVisited()) {
+                            if (!subInterface.isVisited()) {
                                 queue.add(subInterface);
                                 subInterface.setVisited(true);
                             }
@@ -167,8 +167,8 @@ public class Main {
         String myEntitiesString = myEntities.stream()
                 .map(MyEntity::toString)
                 .collect(Collectors.joining("\n"));
-        FileWriter fw = new FileWriter(file);
-        fw.write(myEntitiesString);
-        fw.close();
+        try (FileWriter fw = new FileWriter(file)) {
+            fw.write(myEntitiesString);
+        }
     }
 }
