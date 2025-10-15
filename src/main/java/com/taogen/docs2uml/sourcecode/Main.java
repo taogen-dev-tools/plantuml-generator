@@ -163,7 +163,7 @@ public class Main {
     private static void linkMyEntities(List<MyEntity> myEntities, Map<String, MyEntity> classPathToEntity) {
         // link
         for (MyEntity myEntity : myEntities) {
-            log.debug("To link myEntity: {}", myEntity);
+            log.debug("To link myEntity: {}", myEntity.getId());
             linkClasses(myEntity, classPathToEntity);
             linkInterfaces(myEntity, classPathToEntity);
         }

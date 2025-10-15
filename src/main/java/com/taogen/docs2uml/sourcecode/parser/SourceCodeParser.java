@@ -82,9 +82,9 @@ public class SourceCodeParser {
             Matcher packageMatcher = PACKAGE_PATTERN.matcher(sourceCodeStr);
             if (packageMatcher.find()) {
                 entity.setPackageName(packageMatcher.group(1));
-                log.debug(packageMatcher.group());
+                log.debug("match: {}", packageMatcher.group());
                 for (int i = 1; i < packageMatcher.groupCount(); i++) {
-                    log.debug(packageMatcher.group(i));
+                    log.trace("group {}: {}", i, packageMatcher.group(i));
                 }
             }
             // is abstract
@@ -94,7 +94,7 @@ public class SourceCodeParser {
             if (classNameMatcher.find()) {
                 log.debug("match: {}", classNameMatcher.group());
                 for (int i = 1; i <= classNameMatcher.groupCount(); i++) {
-                    log.debug("group {}: {}", i, classNameMatcher.group(i));
+                    log.trace("group {}: {}", i, classNameMatcher.group(i));
                 }
                 entity.setClassName(classNameMatcher.group(CLASS_NAME_GROUP));
                 // parent class and interfaces
