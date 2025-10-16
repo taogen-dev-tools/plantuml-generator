@@ -72,11 +72,14 @@ public class SourceCodeParser {
                 log.warn("No entity type found for file {}", filePath);
                 return null;
             }
-            long start = System.currentTimeMillis();
-            SourceCodeContent sourceCodeContent = SourceCodeUtil.getSourceCodeContent(sourceCodeStr);
-            long elapsedTime = System.currentTimeMillis() - start;
-            getSourceCodeContentElapsedTime += elapsedTime;
-            log.info("getSourceCodeContent Elapsed time: {}", elapsedTime);
+            SourceCodeContent sourceCodeContent = null;
+            if (commandOption.isMembersDisplayed()) {
+                long start = System.currentTimeMillis();
+                sourceCodeContent = SourceCodeUtil.getSourceCodeContent(sourceCodeStr);
+                long elapsedTime = System.currentTimeMillis() - start;
+                getSourceCodeContentElapsedTime += elapsedTime;
+            }
+//            log.info("getSourceCodeContent Elapsed time: {}", elapsedTime);
             // package name
             entity.setPackageName(getPackageName(sourceCodeStr));
             if (entity.getPackageName() == null) {
@@ -105,13 +108,18 @@ public class SourceCodeParser {
             }
             entity.setClassNameWithoutGeneric(GenericUtil.removeGeneric(entity.getClassName()));
             entity.setId(entity.getPackageName() + "." + entity.getClassNameWithoutGeneric());
-            // fields
-            String fieldStrings = sourceCodeContent.getFields().stream().collect(Collectors.joining("\n"));
-            entity.setFields(getFieldList(fieldStrings));
-            // methods
-            String methodStrings = sourceCodeContent.getMethods().stream().collect(Collectors.joining("\n"));
-            entity.setMethods(getMethodList(methodStrings));
-
+            if (commandOption.isMembersDisplayed()) {
+                // fields
+                String fieldStrings = sourceCodeContent.getFields().stream().collect(Collectors.joining("\n"));
+                entity.setFields(getFieldList(fieldStrings));
+                // methods
+                String methodStrings = sourceCodeContent.getMethods().stream().collect(Collectors.joining("\n"));
+                if (entity.getClassNameWithoutGeneric().equals("BeanFactory")) {
+                    log.debug("method size: {}", sourceCodeContent.getMethods().size());
+                    log.debug("methodStrings: \n{}", methodStrings);
+                }
+                entity.setMethods(getMethodList(methodStrings));
+            }
             log.debug("myEntity: {}", entity);
         }
         return entity;

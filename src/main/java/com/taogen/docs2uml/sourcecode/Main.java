@@ -36,7 +36,7 @@ public class Main {
         Predicate<Path> matchPredicate = FilePathScanner.getSpringFrameworkMatchPredicate();
         List<String> filePaths = scanFiles(commandOption.getRootDirPath(), matchPredicate);
         // parse files to myEntities
-        List<MyEntity> myEntities = parseFilesToMyEntities(filePaths);
+        List<MyEntity> myEntities = parseFilesToMyEntities(filePaths, commandOption);
         // filter myEntities for the specified class
         List<MyEntity> specifiedMyEntities = filterMyEntitiesForSpecifiedClass(myEntities, commandOption);
         // generate plantUML text
@@ -54,12 +54,12 @@ public class Main {
         return filePaths;
     }
 
-    private static List<MyEntity> parseFilesToMyEntities(List<String> filePaths) throws IOException {
+    private static List<MyEntity> parseFilesToMyEntities(List<String> filePaths, CommandOption commandOption) throws IOException {
         SourceCodeParser parser = new SourceCodeParser();
         List<MyEntity> myEntities = filePaths.stream()
                 .map(filePath -> {
                     try {
-                        return parser.parse(filePath, null);
+                        return parser.parse(filePath, commandOption);
                     } catch (IOException e) {
                         throw new RuntimeException(e);
                     }
