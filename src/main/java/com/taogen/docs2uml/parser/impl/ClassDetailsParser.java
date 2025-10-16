@@ -276,7 +276,7 @@ public class ClassDetailsParser extends AbstractParser {
                 String decorativeText = decorativeElement.text();
                 isStatic = decorativeText.contains(DecorativeKeyword.STATIC);
                 isFinal = decorativeText.contains(DecorativeKeyword.FINAL);
-                visibility = MyField.getVisibilityByContainsText(decorativeText);
+                visibility = Visibility.getVisibilityByContainsText(decorativeText);
                 String[] decorativeTextSplit = decorativeText.split(" ");
                 type = decorativeTextSplit[decorativeTextSplit.length - 1];
                 Element nameElement = fieldElement.getElementsByClass("memberNameLink").first().getElementsByTag("a").first();
@@ -310,7 +310,7 @@ public class ClassDetailsParser extends AbstractParser {
             // TODO: Unverified. We assume all parameters are in `<a>` tag. It's an uncertain result.
             if (tdElements.size() > 1) {
                 String decorativeText = tdElements.first().getElementsByTag("code").first().text();
-                visibility = MyField.getVisibilityByContainsText(decorativeText);
+                visibility = Visibility.getVisibilityByContainsText(decorativeText);
                 isStatic = decorativeText.contains(DecorativeKeyword.STATIC);
                 isAbstract = decorativeText.contains(DecorativeKeyword.ABSTRACT);
                 codeElement = tdElements.get(1).getElementsByTag("code").first();
@@ -367,7 +367,7 @@ public class ClassDetailsParser extends AbstractParser {
             MyMethod myMethod = new MyMethod();
             myMethod.setIsStatic(decorativeText.contains(DecorativeKeyword.STATIC));
             myMethod.setIsAbstract(decorativeText.contains(DecorativeKeyword.ABSTRACT));
-            myMethod.setVisibility(MyField.getVisibilityByContainsText(decorativeText));
+            myMethod.setVisibility(Visibility.getVisibilityByContainsText(decorativeText));
             myMethod.setReturnType(decorativeTextSplit[decorativeTextSplit.length - 1]);
             myMethod.setName(tdElements.get(1).getElementsByTag("code").first().getElementsByTag("a").first().text());
             myMethod.setParams(getParametersByCodeElement(tdElements.get(1).getElementsByTag("code").first(), myMethod.getName()));

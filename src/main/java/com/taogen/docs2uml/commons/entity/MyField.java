@@ -13,14 +13,4 @@ public class MyField {
     private Boolean isFinal;
     private String type;
     private String name;
-
-    public static Visibility getVisibilityByContainsText(String text) {
-        if (text.contains(String.valueOf(Visibility.PROTECTED).toLowerCase())) {
-            return Visibility.PROTECTED;
-        } else if (text.contains(String.valueOf(Visibility.PRIVATE).toLowerCase())) {
-            return Visibility.PRIVATE;
-        } else {
-            return Visibility.PUBILC;
-        }
-    }
 }
