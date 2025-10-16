@@ -26,6 +26,7 @@ public class Main {
     public static void main(String[] args) throws IOException {
         long start = System.currentTimeMillis();
         CommandOption commandOption = new CommandOption();
+        commandOption.setMembers(true);
         commandOption.setPackageName("org.springframework");
         commandOption.setTopPackageName("org.springframework");
         commandOption.setSpecifiedClass("org.springframework.beans.factory.BeanFactory");
@@ -67,6 +68,7 @@ public class Main {
                 .collect(Collectors.toList());
         writeMyEntityToFile(myEntities, "myEntities.txt");
         log.debug("myEntities size: {}", myEntities.size());
+        log.info("getSourceCodeContent Elapsed time: {}", parser.getGetSourceCodeContentElapsedTime());
         return myEntities;
     }
 

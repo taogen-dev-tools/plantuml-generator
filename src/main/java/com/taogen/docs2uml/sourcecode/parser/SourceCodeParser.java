@@ -1,20 +1,23 @@
 package com.taogen.docs2uml.sourcecode.parser;
 
+import com.taogen.docs2uml.commons.constant.DecorativeKeyword;
 import com.taogen.docs2uml.commons.constant.EntityType;
+import com.taogen.docs2uml.commons.constant.Visibility;
 import com.taogen.docs2uml.commons.entity.CommandOption;
 import com.taogen.docs2uml.commons.entity.MyEntity;
+import com.taogen.docs2uml.commons.entity.MyField;
+import com.taogen.docs2uml.commons.entity.MyMethod;
 import com.taogen.docs2uml.commons.util.GenericUtil;
 import com.taogen.docs2uml.commons.util.SourceCodeUtil;
+import com.taogen.docs2uml.commons.util.vo.SourceCodeContent;
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
@@ -22,7 +25,9 @@ import java.util.stream.Collectors;
  * @author taogen
  */
 @Slf4j
+@Data
 public class SourceCodeParser {
+    private int getSourceCodeContentElapsedTime = 0;
     public static final Map<String, EntityType> STRING_TO_ENTITY_TYPE = new HashMap<>();
 
     static {
@@ -33,21 +38,6 @@ public class SourceCodeParser {
         STRING_TO_ENTITY_TYPE.put("public abstract class", EntityType.ABSTRACT);
     }
 
-    public static final Pattern PACKAGE_PATTERN = Pattern.compile("package\\s+(([a-zA-Z0-9$_]+\\.?)+);");
-    //    public static final Pattern PACKAGE_PATTERN = Pattern.compile("package\\s+((\\w\\.?)+);");
-    // public static final Pattern CLASS_NAME_PATTERN = Pattern.compile("public(\\s+abstract)?\\s+(class|interface|@interface|enum)\\s+((.+?)(<.+?>)?)(\\s+(extends|implements)\\s+((.+?)(<.+?>)?))?(\\s+(extends|implements)\\s+((.+?)(<.+?>)?))?\\s*\\{");
-    public static final String CLASS_NAME_PATTERN_STR = "(class|interface|@interface|enum)\\s+((.+?)(<.+?>)?)";
-    public static final String PARENT_CLASS_OR_INTERFACES_PATTERN_STR = "(\\s+(extends|implements)\\s+(((.|[\\n])+?)(<.+?>)?))?";
-    //    public static final String PARENT_CLASS_OR_INTERFACES = "(\\s+(extends|implements)\\s+(([.\t\n]+?)(<.+?>)?))?";
-    public static final Pattern CLASS_NAME_PATTERN = Pattern.compile(
-            "public(\\s+abstract)?\\s+" +
-                    CLASS_NAME_PATTERN_STR +
-                    PARENT_CLASS_OR_INTERFACES_PATTERN_STR +
-                    PARENT_CLASS_OR_INTERFACES_PATTERN_STR +
-                    "\\s+\\{"); // Pattern.DOTALL
-    public static final int CLASS_NAME_GROUP = 4;
-    public static final int FIRST_PARENT_OR_INTERFACE = 7;
-    public static final int SECOND_PARENT_OR_INTERFACE = 13;
 
     public static void main(String[] args) throws IOException {
         SourceCodeParser sourceCodeParser = new SourceCodeParser();
@@ -75,12 +65,18 @@ public class SourceCodeParser {
                     .filter(item -> item != null && !item.trim().isEmpty())
                     .collect(Collectors.joining(System.lineSeparator()));
 //            log.debug("sourceCodeStr:\n{}", sourceCodeStr);
+            String[] lines = sourceCodeStr.split("\n");
             // type
             entity.setType(getEntityType(sourceCodeStr));
             if (entity.getType() == null) {
                 log.warn("No entity type found for file {}", filePath);
                 return null;
             }
+            long start = System.currentTimeMillis();
+            SourceCodeContent sourceCodeContent = SourceCodeUtil.getSourceCodeContent(sourceCodeStr);
+            long elapsedTime = System.currentTimeMillis() - start;
+            getSourceCodeContentElapsedTime += elapsedTime;
+            log.info("getSourceCodeContent Elapsed time: {}", elapsedTime);
             // package name
             entity.setPackageName(getPackageName(sourceCodeStr));
             if (entity.getPackageName() == null) {
@@ -89,20 +85,19 @@ public class SourceCodeParser {
             // is abstract
             entity.setIsAbstract(EntityType.ABSTRACT.equals(entity.getType()));
             // class name
-            Matcher classNameMatcher = CLASS_NAME_PATTERN.matcher(sourceCodeStr);
+            Matcher classNameMatcher = SourceCodeUtil.CLASS_DECLARATION_PATTERN.matcher(sourceCodeStr);
             if (classNameMatcher.find()) {
                 log.debug("match: {}", classNameMatcher.group());
                 for (int i = 1; i <= classNameMatcher.groupCount(); i++) {
                     log.trace("group {}: {}", i, classNameMatcher.group(i));
                 }
-                entity.setClassName(classNameMatcher.group(CLASS_NAME_GROUP));
-                String[] lines = sourceCodeStr.split("\n");
+                entity.setClassName(classNameMatcher.group(SourceCodeUtil.CLASS_NAME_GROUP));
                 // parent class and interfaces
-                if (classNameMatcher.group(FIRST_PARENT_OR_INTERFACE) != null) {
-                    setParentClassOrInterfaces(lines, entity, classNameMatcher, FIRST_PARENT_OR_INTERFACE);
+                if (classNameMatcher.group(SourceCodeUtil.CLASS_FIRST_EXTENDS_OR_IMPLEMENTS_GROUP) != null) {
+                    setParentClassOrInterfaces(lines, entity, classNameMatcher, SourceCodeUtil.CLASS_FIRST_EXTENDS_OR_IMPLEMENTS_GROUP);
                 }
-                if (classNameMatcher.group(SECOND_PARENT_OR_INTERFACE) != null) {
-                    setParentClassOrInterfaces(lines, entity, classNameMatcher, SECOND_PARENT_OR_INTERFACE);
+                if (classNameMatcher.group(SourceCodeUtil.CLASS_SECOND_EXTENDS_OR_IMPLEMENTS_GROUP) != null) {
+                    setParentClassOrInterfaces(lines, entity, classNameMatcher, SourceCodeUtil.CLASS_SECOND_EXTENDS_OR_IMPLEMENTS_GROUP);
                 }
             } else {
                 log.warn("Cannot parse file {}", filePath);
@@ -111,12 +106,64 @@ public class SourceCodeParser {
             entity.setClassNameWithoutGeneric(GenericUtil.removeGeneric(entity.getClassName()));
             entity.setId(entity.getPackageName() + "." + entity.getClassNameWithoutGeneric());
             // fields
+            String fieldStrings = sourceCodeContent.getFields().stream().collect(Collectors.joining("\n"));
+            entity.setFields(getFieldList(fieldStrings));
             // methods
-            // subClasses
-            // subInterfaces
+            String methodStrings = sourceCodeContent.getMethods().stream().collect(Collectors.joining("\n"));
+            entity.setMethods(getMethodList(methodStrings));
+
             log.debug("myEntity: {}", entity);
         }
         return entity;
+    }
+
+    private List<MyMethod> getMethodList(String methodStrings) {
+        Matcher methodMatcher = SourceCodeUtil.METHOD_DECLARATION_PATTERN.matcher(methodStrings);
+        List<MyMethod> methodList = new ArrayList<>();
+        while  (methodMatcher.find()) {
+            MyMethod myMethod = new MyMethod();
+            myMethod.setName(methodMatcher.group(SourceCodeUtil.METHOD_NAME_GROUP));
+            myMethod.setReturnType(methodMatcher.group(SourceCodeUtil.METHOD_RETURN_TYPE_GROUP));
+            // TODO
+            myMethod.setParams(null); // TODO
+            myMethod.setVisibility(Visibility.DEFAULT); // TODO
+            myMethod.setIsStatic(false); // TODO
+            myMethod.setIsAbstract(false); // TODO
+            methodList.add(myMethod);
+        }
+        return methodList;
+    }
+
+    private List<MyField> getFieldList(String sourceCodeStr) {
+        Matcher matcher = SourceCodeUtil.FIELD_PATTERN.matcher(sourceCodeStr);
+        List<MyField> fieldList = new ArrayList<>();
+        while (matcher.find()) {
+            MyField field = new MyField();
+            String type = matcher.group(SourceCodeUtil.FIELD_TYPE_GROUP);
+            if (matcher.group(SourceCodeUtil.FIELD_TYPE_GROUP + 1) != null && !matcher.group(SourceCodeUtil.FIELD_TYPE_GROUP + 1).trim().isEmpty()) {
+                type += matcher.group(SourceCodeUtil.FIELD_TYPE_GROUP + 1);
+            }
+            if (matcher.group(SourceCodeUtil.FIELD_TYPE_GROUP + 2) != null && !matcher.group(SourceCodeUtil.FIELD_TYPE_GROUP + 2).trim().isEmpty()) {
+                type += matcher.group(SourceCodeUtil.FIELD_TYPE_GROUP + 2);
+            }
+            field.setType(type);
+            field.setName(matcher.group(SourceCodeUtil.FIELD_NAME_GROUP));
+            field.setVisibility(Visibility.getVisibilityByContainsText(matcher.group(1)));
+            Set<String> keywords = new HashSet<>();
+            if (matcher.group(SourceCodeUtil.FIELD_KEYWORD_GROUP) != null) {
+                keywords.add(matcher.group(SourceCodeUtil.FIELD_KEYWORD_GROUP).trim());
+            }
+            if (matcher.group(SourceCodeUtil.FIELD_KEYWORD_GROUP + 1) != null) {
+                keywords.add(matcher.group(SourceCodeUtil.FIELD_KEYWORD_GROUP + 1).trim());
+            }
+            if (matcher.group(SourceCodeUtil.FIELD_KEYWORD_GROUP + 2) != null) {
+                keywords.add(matcher.group(SourceCodeUtil.FIELD_KEYWORD_GROUP + 2).trim());
+            }
+            field.setIsStatic(keywords.contains(DecorativeKeyword.STATIC));
+            field.setIsFinal(keywords.contains(DecorativeKeyword.FINAL));
+            fieldList.add(field);
+        }
+        return fieldList;
     }
 
     private EntityType getEntityType(String sourceCodeStr) {
@@ -129,7 +176,7 @@ public class SourceCodeParser {
     }
 
     private String getPackageName(String sourceCodeStr) {
-        Matcher packageMatcher = PACKAGE_PATTERN.matcher(sourceCodeStr);
+        Matcher packageMatcher = SourceCodeUtil.PACKAGE_PATTERN.matcher(sourceCodeStr);
         if (packageMatcher.find()) {
             log.debug("match: {}", packageMatcher.group());
             for (int i = 1; i < packageMatcher.groupCount(); i++) {
@@ -142,7 +189,7 @@ public class SourceCodeParser {
     }
 
     private void setParentClassOrInterfaces(String[] lines, MyEntity entity, Matcher classNameMatcher, int keywordGroup) {
-        String stringValue = classNameMatcher.group(keywordGroup + 1).trim();
+        String stringValue = classNameMatcher.group(keywordGroup + 2).trim();
         log.debug("stringValue: {}", stringValue);
         if ("extends".equals(classNameMatcher.group(keywordGroup)) &&
                 !EntityType.INTERFACE.equals(entity.getType())) {
