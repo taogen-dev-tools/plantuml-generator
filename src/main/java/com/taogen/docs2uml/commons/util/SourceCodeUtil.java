@@ -28,19 +28,19 @@ public class SourceCodeUtil {
      * Class declaration
      */
     // public static final Pattern CLASS_NAME_PATTERN = Pattern.compile("public(\\s+abstract)?\\s+(class|interface|@interface|enum)\\s+((.+?)(<.+?>)?)(\\s+(extends|implements)\\s+((.+?)(<.+?>)?))?(\\s+(extends|implements)\\s+((.+?)(<.+?>)?))?\\s*\\{");
-    public static final String CLASS_NAME_PATTERN_STR = "(class|interface|@interface|enum)\\s+((.+?)(<.+?>)?)";
+    public static final String CLASS_NAME_WITH_GENERIC_PATTERN_STR = "(([A-Z][a-zA-Z0-9$_]*)(<.+?>)?)";
     public static final String PARENT_CLASS_OR_INTERFACES_PATTERN_STR = "(\\s+(extends|implements)\\s+(((.|[\\n])+?)(<.+?>)?))?";
     //    public static final String PARENT_CLASS_OR_INTERFACES = "(\\s+(extends|implements)\\s+(([.\t\n]+?)(<.+?>)?))?";
-    public static final String ANNOTATION_PATTERN_STR = "(@[a-zA-Z0-9$_(\"=,.){} ]+\\s*)*";
+    public static final String ANNOTATION_PATTERN_STR = "(@" + CLASS_NAME_WITH_GENERIC_PATTERN_STR + "(\\([a-zA-Z0-9$_\"=,.{} ]+\\))?)*";
     public static final Pattern CLASS_DECLARATION_PATTERN = Pattern.compile(
             ANNOTATION_PATTERN_STR +
-                    "public(\\s+abstract)?\\s+" +
-                    CLASS_NAME_PATTERN_STR +
+                    "public(\\s+abstract)?\\s+(class|interface|@interface|enum)\\s+" +
+                    CLASS_NAME_WITH_GENERIC_PATTERN_STR +
                     PARENT_CLASS_OR_INTERFACES_PATTERN_STR +
                     PARENT_CLASS_OR_INTERFACES_PATTERN_STR +
                     "\\s+\\{"); // Pattern.DOTALL
-    public static final int CLASS_NAME_GROUP = 4;
-    public static final int CLASS_FIRST_EXTENDS_OR_IMPLEMENTS_GROUP = 8;
+    public static final int CLASS_NAME_WITH_GENERIC_GROUP = 8;
+    public static final int CLASS_FIRST_EXTENDS_OR_IMPLEMENTS_GROUP = 12;
     public static final int CLASS_SECOND_EXTENDS_OR_IMPLEMENTS_GROUP = CLASS_FIRST_EXTENDS_OR_IMPLEMENTS_GROUP + 6;
     /**
      * Field declaration
@@ -50,17 +50,22 @@ public class SourceCodeUtil {
                     ANNOTATION_PATTERN_STR +
                     "(\\w+[ ]+)?(\\w+[ ]+)?(\\w+[ ]+)?([a-zA-Z0-9$_]+)(<.+?>)?(\\[\\])?\\s+([a-zA-Z0-9$_]+)(\\s*=\\s*.+)?;");
     //    public static final Pattern METHOD_DECLARATION_PATTERN = Pattern.compile(ANNOTATION_PATTERN_STR + "(\\w+[ ]+)?(\\w+[ ]+)?(\\w+[ ]+)?(<.+?>[ ]+)?([a-zA-Z0-9$_.]+)(\\[\\])?(<.+?>)?\\s+([a-zA-Z0-9$_]+)\\(\\s*.*\\)(\\s+throws\\s+.+)?\\s*\\{");
-    public static final int FIELD_KEYWORD_GROUP = 2;
-    public static final int FIELD_TYPE_GROUP = 5;
-    public static final int FIELD_NAME_GROUP = 8;
+    public static final int FIELD_VISIBILITY_GROUP = 6;
+    public static final int FIELD_FIRST_KEYWORD_GROUP = 7;
+    public static final int FIELD_TYPE_GROUP = 9;
+    public static final int FIELD_NAME_GROUP = 12;
     /**
      * Method declaration
      */
     public static final String RETURN_TYPE_PATTERN_STR = "(<.+?>[ ]+)?([A-Z][a-zA-Z0-9$_.]*)(<.+?>)?(\\[\\])?";
-    public static final Pattern METHOD_DECLARATION_PATTERN = Pattern.compile(ANNOTATION_PATTERN_STR + "(\\w+[ ]+)?(\\w+[ ]+)?(\\w+[ ]+)?" + RETURN_TYPE_PATTERN_STR + "\\s+([a-zA-Z0-9$_]+)\\(\\s*(.*)\\)((\\s+throws\\s+.+)?\\s*\\{|\\s*;)");
-    public static final int METHOD_RETURN_TYPE_GROUP = 6;
-    public static final int METHOD_NAME_GROUP = 9;
-    public static final int METHOD_PARAMETER_GROUP = 10;
+    public static final Pattern METHOD_DECLARATION_PATTERN = Pattern.compile(
+            ANNOTATION_PATTERN_STR +
+                    "(\\w+[ ]+)?(\\w+[ ]+)?(\\w+[ ]+)?" +
+                    RETURN_TYPE_PATTERN_STR +
+                    "\\s+([a-zA-Z0-9$_]+)\\(\\s*(.*)\\)((\\s+throws\\s+.+)?\\s*\\{|\\s*;)");
+    public static final int METHOD_RETURN_TYPE_GROUP = 10;
+    public static final int METHOD_NAME_GROUP = 13;
+    public static final int METHOD_PARAMETER_GROUP = 14;
     /**
      * Constructor declaration
      */
@@ -70,8 +75,8 @@ public class SourceCodeUtil {
      */
     public static final Pattern NESTED_CLASS_PATTERN = Pattern.compile(
             ANNOTATION_PATTERN_STR +
-                    "([a-zA-Z0-9$_]+\\s+)?([a-zA-Z0-9$_]+\\s+)?([a-zA-Z0-9$_]+\\s+)?" +
-                    CLASS_NAME_PATTERN_STR +
+                    "([a-zA-Z0-9$_]+\\s+)?([a-zA-Z0-9$_]+\\s+)?([a-zA-Z0-9$_]+\\s+)?(class|interface|@interface|enum)\\s+" +
+                    CLASS_NAME_WITH_GENERIC_PATTERN_STR +
                     PARENT_CLASS_OR_INTERFACES_PATTERN_STR +
                     PARENT_CLASS_OR_INTERFACES_PATTERN_STR +
                     "\\s+\\{"); // Pattern.DOTALL

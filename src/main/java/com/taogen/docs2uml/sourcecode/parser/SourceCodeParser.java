@@ -91,7 +91,7 @@ public class SourceCodeParser {
                 for (int i = 1; i <= classNameMatcher.groupCount(); i++) {
                     log.trace("group {}: {}", i, classNameMatcher.group(i));
                 }
-                entity.setClassName(classNameMatcher.group(SourceCodeUtil.CLASS_NAME_GROUP));
+                entity.setClassName(classNameMatcher.group(SourceCodeUtil.CLASS_NAME_WITH_GENERIC_GROUP));
                 // parent class and interfaces
                 if (classNameMatcher.group(SourceCodeUtil.CLASS_FIRST_EXTENDS_OR_IMPLEMENTS_GROUP) != null) {
                     setParentClassOrInterfaces(lines, entity, classNameMatcher, SourceCodeUtil.CLASS_FIRST_EXTENDS_OR_IMPLEMENTS_GROUP);
@@ -148,16 +148,16 @@ public class SourceCodeParser {
             }
             field.setType(type);
             field.setName(matcher.group(SourceCodeUtil.FIELD_NAME_GROUP));
-            field.setVisibility(Visibility.getVisibilityByContainsText(matcher.group(1)));
+            field.setVisibility(Visibility.getVisibilityByContainsText(matcher.group(SourceCodeUtil.FIELD_VISIBILITY_GROUP)));
             Set<String> keywords = new HashSet<>();
-            if (matcher.group(SourceCodeUtil.FIELD_KEYWORD_GROUP) != null) {
-                keywords.add(matcher.group(SourceCodeUtil.FIELD_KEYWORD_GROUP).trim());
+            if (matcher.group(SourceCodeUtil.FIELD_FIRST_KEYWORD_GROUP) != null) {
+                keywords.add(matcher.group(SourceCodeUtil.FIELD_FIRST_KEYWORD_GROUP).trim());
             }
-            if (matcher.group(SourceCodeUtil.FIELD_KEYWORD_GROUP + 1) != null) {
-                keywords.add(matcher.group(SourceCodeUtil.FIELD_KEYWORD_GROUP + 1).trim());
+            if (matcher.group(SourceCodeUtil.FIELD_FIRST_KEYWORD_GROUP + 1) != null) {
+                keywords.add(matcher.group(SourceCodeUtil.FIELD_FIRST_KEYWORD_GROUP + 1).trim());
             }
-            if (matcher.group(SourceCodeUtil.FIELD_KEYWORD_GROUP + 2) != null) {
-                keywords.add(matcher.group(SourceCodeUtil.FIELD_KEYWORD_GROUP + 2).trim());
+            if (matcher.group(SourceCodeUtil.FIELD_FIRST_KEYWORD_GROUP + 2) != null) {
+                keywords.add(matcher.group(SourceCodeUtil.FIELD_FIRST_KEYWORD_GROUP + 2).trim());
             }
             field.setIsStatic(keywords.contains(DecorativeKeyword.STATIC));
             field.setIsFinal(keywords.contains(DecorativeKeyword.FINAL));
