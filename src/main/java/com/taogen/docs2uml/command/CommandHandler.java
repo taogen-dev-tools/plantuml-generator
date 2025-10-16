@@ -110,10 +110,10 @@ public class CommandHandler {
         }
         String members = getOptionByKeys(argumentsMap, MEMBERS_OPTION, MEMBERS_FULL_OPTION);
         if (members != null) {
-            this.commandOption.setMembers(Boolean.parseBoolean(members));
+            this.commandOption.setMembersDisplayed(Boolean.parseBoolean(members));
         } else {
             // default value
-            this.commandOption.setMembers(true);
+            this.commandOption.setMembersDisplayed(true);
         }
         this.commandOption.setSpecifiedClass(getOptionByKeys(argumentsMap, CLASS_OPTION, CLASS_FULL_OPTION));
     }

@@ -13,7 +13,7 @@ public class CommandOption {
     private String topPackageName;
     private String packageName;
     private Boolean subPackage;
-    private Boolean members;
+    private boolean membersDisplayed = false;
     private String specifiedClass;
 
     public CommandOption() {

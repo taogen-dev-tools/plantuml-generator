@@ -6,7 +6,7 @@
 ${myEntity.type} ${myEntity.className}
 <#if myEntity.type != "annotation">
 {
-<#if commandOptions.members ?? && commandOptions.members == true>
+<#if commandOptions.membersDisplayed ?? && commandOptions.membersDisplayed == true>
     'fields
     <#if myEntity.fields??>
     <#list myEntity.fields as field>

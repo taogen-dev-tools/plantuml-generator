@@ -26,7 +26,7 @@ public class Main {
     public static void main(String[] args) throws IOException {
         long start = System.currentTimeMillis();
         CommandOption commandOption = new CommandOption();
-        commandOption.setMembers(true);
+        commandOption.setMembersDisplayed(true);
         commandOption.setPackageName("org.springframework");
         commandOption.setTopPackageName("org.springframework");
         commandOption.setSpecifiedClass("org.springframework.beans.factory.BeanFactory");

@@ -3,8 +3,8 @@ package com.taogen.docs2uml.generator.impl;
 import com.taogen.docs2uml.commons.entity.CommandOption;
 import com.taogen.docs2uml.commons.entity.MyEntity;
 import com.taogen.docs2uml.commons.exception.GeneratorException;
-import com.taogen.docs2uml.generator.AbstractGenerator;
 import com.taogen.docs2uml.commons.vo.MyEntityVo;
+import com.taogen.docs2uml.generator.AbstractGenerator;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
 import org.apache.logging.log4j.LogManager;
@@ -51,7 +51,7 @@ public class ClassDiagramGenerator extends AbstractGenerator {
         if (commandOption.getSubPackage() != null && commandOption.getSubPackage()){
             sb.append("-(contains-subpackages)");
         }
-        if (commandOption.getMembers() != null && !commandOption.getMembers()){
+        if (!commandOption.isMembersDisplayed()){
             sb.append("-(without-members)");
         }
         sb.append(".txt");
