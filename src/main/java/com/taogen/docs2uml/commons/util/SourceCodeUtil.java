@@ -48,7 +48,7 @@ public class SourceCodeUtil {
      * Field declaration
      */
     public static final Pattern FIELD_PATTERN = Pattern.compile(
-            "^\\s*" +
+            "\\s*" +
                     ANNOTATION_PATTERN_STR +
                     MAX_THREE_KEYWORDS_PATTERN_STR +
                     IDENTIFIER_PATTERN_STR +
@@ -66,18 +66,20 @@ public class SourceCodeUtil {
     public static final String RETURN_TYPE_PATTERN_STR = "(<.+?>[ ]+)?([a-zA-Z0-9$_.]+)(<.+?>)?(\\[\\])?";
     public static final String METHOD_NAME_PATTERN_STR = "\\s+([a-zA-Z0-9$_]+)";
     public static final String DO_NOT_MATCH_IN_METHOD_PATTERN_STR = "(?<![{};])\\s*\\n*\\s*";
-    public static final String METHOD_PARAMS_PATTERN_STR = "\\([a-zA-Z0-9$_.,?<>@\\[\\] \\n\\t]*\\)";
-    public static final String THROWS_PATTERN_STR = "(\\s+throws\\s+[A-Z][a-zA-Z0-9$_]+)?";
+    public static final String METHOD_PARAMS_PATTERN_STR = "\\(([a-zA-Z0-9$_.,?<>@\\[\\] \\n\\t]*)\\)";
+    public static final String THROWS_PATTERN_STR = "(\\s+throws\\s+[A-Z][a-zA-Z0-9$_, ]+)?";
     public static final Pattern METHOD_DECLARATION_PATTERN = Pattern.compile(
             DO_NOT_MATCH_IN_METHOD_PATTERN_STR +
                     ANNOTATION_PATTERN_STR +
                     MAX_THREE_KEYWORDS_PATTERN_STR +
                     RETURN_TYPE_PATTERN_STR +
-                    "(?<!return)(?<!new)" +
+                    "(?<!return)(?<!new)(?<!throw)" +
                     METHOD_NAME_PATTERN_STR +
                     METHOD_PARAMS_PATTERN_STR +
                     THROWS_PATTERN_STR +
                     "(\\s*\\{|\\s*;)");
+    public static final int METHOD_VISIBILITY_GROUP = 6;
+    public static final int METHOD_FIRST_KEYWORD_GROUP = 7;
     public static final int METHOD_RETURN_TYPE_GROUP = 10;
     public static final int METHOD_NAME_GROUP = 13;
     public static final int METHOD_PARAMETER_GROUP = 14;
@@ -97,12 +99,12 @@ public class SourceCodeUtil {
                     PARENT_CLASS_OR_INTERFACES_PATTERN_STR +
                     "\\s+\\{"); // Pattern.DOTALL
 
-    public static void main(String[] args) {
-        System.out.println("class pattern: " + CLASS_DECLARATION_PATTERN.pattern());
-        System.out.println("field pattern: " + FIELD_PATTERN.pattern());
-        System.out.println("method pattern: " + METHOD_DECLARATION_PATTERN.pattern());
-        System.out.println("nested class pattern: " + NESTED_CLASS_PATTERN.pattern());
-    }
+//    public static void main(String[] args) {
+//        System.out.println("class pattern: " + CLASS_DECLARATION_PATTERN.pattern());
+//        System.out.println("field pattern: " + FIELD_PATTERN.pattern());
+//        System.out.println("method pattern: " + METHOD_DECLARATION_PATTERN.pattern());
+//        System.out.println("nested class pattern: " + NESTED_CLASS_PATTERN.pattern());
+//    }
 
     /**
      * Remove comments
@@ -226,4 +228,46 @@ public class SourceCodeUtil {
         }
         return sourceCodeContent;
     }
+
+    public static List<String> splitParametersFromStr(String parameterStr) {
+        if (parameterStr == null || parameterStr.trim().isEmpty()) {
+            return new ArrayList<>();
+        }
+        LinkedList<String> stack = new LinkedList<>();
+        List<Integer> separatorIndexes = new ArrayList<>();
+        separatorIndexes.add(-1);
+        for (int i = 0; i < parameterStr.length(); i++) {
+            char c = parameterStr.charAt(i);
+            if (c == '<') {
+                stack.push("<");
+            } else if (c == '>') {
+                stack.pop();
+            } else if (c == ',') {
+                if (stack.isEmpty()) {
+                    separatorIndexes.add(i);
+                }
+            }
+        }
+        List<String> result = new ArrayList<>();
+        for (int i = 0; i < separatorIndexes.size(); i++) {
+            if (i < separatorIndexes.size() - 1) {
+                result.add(parameterStr.substring(separatorIndexes.get(i) + 1, separatorIndexes.get(i + 1)).trim());
+            } else {
+                result.add(parameterStr.substring(separatorIndexes.get(i) + 1).trim());
+            }
+        }
+        return result;
+    }
+
+//    public static void main(String[] args) {
+//        System.out.println(splitParametersFromStr("Class<T> requiredType, Object... args"));
+//        System.out.println(splitParametersFromStr("Class<T> requiredType"));
+//        System.out.println(splitParametersFromStr("String name, @Nullable Class<T> requiredType"));
+//        System.out.println(splitParametersFromStr("String name, Object bean, String name2, Object bean2"));
+//        List<String> parameterStrList = splitParametersFromStr("String name, Object bean, String name2, Object bean2");
+//        List<MyParameter> parameterList = parameterStrList.stream()
+//                .map(MyParameter::getFromStr)
+//                .collect(Collectors.toList());
+//        System.out.println(parameterList);
+//    }
 }

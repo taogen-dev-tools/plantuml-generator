@@ -3,10 +3,7 @@ package com.taogen.docs2uml.sourcecode.parser;
 import com.taogen.docs2uml.commons.constant.DecorativeKeyword;
 import com.taogen.docs2uml.commons.constant.EntityType;
 import com.taogen.docs2uml.commons.constant.Visibility;
-import com.taogen.docs2uml.commons.entity.CommandOption;
-import com.taogen.docs2uml.commons.entity.MyEntity;
-import com.taogen.docs2uml.commons.entity.MyField;
-import com.taogen.docs2uml.commons.entity.MyMethod;
+import com.taogen.docs2uml.commons.entity.*;
 import com.taogen.docs2uml.commons.util.GenericUtil;
 import com.taogen.docs2uml.commons.util.SourceCodeUtil;
 import com.taogen.docs2uml.commons.util.vo.SourceCodeContent;
@@ -141,11 +138,26 @@ public class SourceCodeParser {
             MyMethod myMethod = new MyMethod();
             myMethod.setName(methodMatcher.group(SourceCodeUtil.METHOD_NAME_GROUP));
             myMethod.setReturnType(methodMatcher.group(SourceCodeUtil.METHOD_RETURN_TYPE_GROUP));
-            // TODO
-            myMethod.setParams(null); // TODO
-            myMethod.setVisibility(Visibility.DEFAULT); // TODO
-            myMethod.setIsStatic(false); // TODO
-            myMethod.setIsAbstract(false); // TODO
+            String parameterStr = methodMatcher.group(SourceCodeUtil.METHOD_PARAMETER_GROUP);
+            List<String> parameterStrList = SourceCodeUtil.splitParametersFromStr(parameterStr);
+            List<MyParameter> parameterList = parameterStrList.stream()
+                    .map(MyParameter::getFromStr)
+                    .collect(Collectors.toList());
+            myMethod.setParams(parameterList);
+            myMethod.setVisibility(Visibility.getVisibilityByContainsText(
+                    methodMatcher.group(SourceCodeUtil.METHOD_VISIBILITY_GROUP)));
+            Set<String> keywords = new HashSet<>();
+            if (methodMatcher.group(SourceCodeUtil.METHOD_FIRST_KEYWORD_GROUP) != null) {
+                keywords.add(methodMatcher.group(SourceCodeUtil.METHOD_FIRST_KEYWORD_GROUP).trim());
+            }
+            if (methodMatcher.group(SourceCodeUtil.METHOD_FIRST_KEYWORD_GROUP + 1) != null) {
+                keywords.add(methodMatcher.group(SourceCodeUtil.METHOD_FIRST_KEYWORD_GROUP + 1).trim());
+            }
+            if (methodMatcher.group(SourceCodeUtil.METHOD_FIRST_KEYWORD_GROUP + 2) != null) {
+                keywords.add(methodMatcher.group(SourceCodeUtil.METHOD_FIRST_KEYWORD_GROUP + 2).trim());
+            }
+            myMethod.setIsStatic(keywords.contains("static"));
+            myMethod.setIsAbstract(keywords.contains("abstract"));
             methodList.add(myMethod);
         }
         return methodList;
