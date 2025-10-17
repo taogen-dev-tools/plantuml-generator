@@ -15,6 +15,8 @@ import java.util.regex.Pattern;
  */
 @Slf4j
 public class SourceCodeUtil {
+    public static final String MAX_THREE_KEYWORDS_PATTERN_STR = "(\\w+[ ]+)?(\\w+[ ]+)?(\\w+[ ]+)?";
+    public static final String IDENTIFIER_PATTERN_STR = "([a-zA-Z0-9$_]+)";
     /**
      * Package
      */
@@ -48,7 +50,11 @@ public class SourceCodeUtil {
     public static final Pattern FIELD_PATTERN = Pattern.compile(
             "^\\s*" +
                     ANNOTATION_PATTERN_STR +
-                    "(\\w+[ ]+)?(\\w+[ ]+)?(\\w+[ ]+)?([a-zA-Z0-9$_]+)(<.+?>)?(\\[\\])?\\s+([a-zA-Z0-9$_]+)(\\s*=\\s*.+)?;");
+                    MAX_THREE_KEYWORDS_PATTERN_STR +
+                    IDENTIFIER_PATTERN_STR +
+                    "(<.+?>)?(\\[\\])?\\s+" +
+                    IDENTIFIER_PATTERN_STR +
+                    "(\\s*=\\s*.+)?;");
     //    public static final Pattern METHOD_DECLARATION_PATTERN = Pattern.compile(ANNOTATION_PATTERN_STR + "(\\w+[ ]+)?(\\w+[ ]+)?(\\w+[ ]+)?(<.+?>[ ]+)?([a-zA-Z0-9$_.]+)(\\[\\])?(<.+?>)?\\s+([a-zA-Z0-9$_]+)\\(\\s*.*\\)(\\s+throws\\s+.+)?\\s*\\{");
     public static final int FIELD_VISIBILITY_GROUP = 6;
     public static final int FIELD_FIRST_KEYWORD_GROUP = 7;
@@ -58,16 +64,20 @@ public class SourceCodeUtil {
      * Method declaration
      */
     public static final String RETURN_TYPE_PATTERN_STR = "(<.+?>[ ]+)?([a-zA-Z0-9$_.]+)(<.+?>)?(\\[\\])?";
-    public static final String DO_NOT_MATCH_IN_METHOD_PATTERN_STR = "(?<![{};])\\s*\\n+\\s*";
+    public static final String METHOD_NAME_PATTERN_STR = "\\s+([a-zA-Z0-9$_]+)";
+    public static final String DO_NOT_MATCH_IN_METHOD_PATTERN_STR = "(?<![{};])\\s*\\n*\\s*";
     public static final String METHOD_PARAMS_PATTERN_STR = "\\([a-zA-Z0-9$_.,?<>@\\[\\] \\n\\t]*\\)";
+    public static final String THROWS_PATTERN_STR = "(\\s+throws\\s+[A-Z][a-zA-Z0-9$_]+)?";
     public static final Pattern METHOD_DECLARATION_PATTERN = Pattern.compile(
             DO_NOT_MATCH_IN_METHOD_PATTERN_STR +
                     ANNOTATION_PATTERN_STR +
-                    "(\\w+[ ]+)?(\\w+[ ]+)?(\\w+[ ]+)?" +
+                    MAX_THREE_KEYWORDS_PATTERN_STR +
                     RETURN_TYPE_PATTERN_STR +
-                    "\\s+([a-zA-Z0-9$_]+)" +
+                    "(?<!return)(?<!new)" +
+                    METHOD_NAME_PATTERN_STR +
                     METHOD_PARAMS_PATTERN_STR +
-                    "(\\s+throws\\s+[A-Z][a-zA-Z0-9$_]+)?(\\s*\\{|\\s*;)");
+                    THROWS_PATTERN_STR +
+                    "(\\s*\\{|\\s*;)");
     public static final int METHOD_RETURN_TYPE_GROUP = 10;
     public static final int METHOD_NAME_GROUP = 13;
     public static final int METHOD_PARAMETER_GROUP = 14;
@@ -80,7 +90,8 @@ public class SourceCodeUtil {
      */
     public static final Pattern NESTED_CLASS_PATTERN = Pattern.compile(
             ANNOTATION_PATTERN_STR +
-                    "([a-zA-Z0-9$_]+\\s+)?([a-zA-Z0-9$_]+\\s+)?([a-zA-Z0-9$_]+\\s+)?(class|interface|@interface|enum)\\s+" +
+                    MAX_THREE_KEYWORDS_PATTERN_STR +
+                    "(class|interface|@interface|enum)\\s+" +
                     CLASS_NAME_WITH_GENERIC_PATTERN_STR +
                     PARENT_CLASS_OR_INTERFACES_PATTERN_STR +
                     PARENT_CLASS_OR_INTERFACES_PATTERN_STR +
