@@ -31,7 +31,7 @@ public class SourceCodeUtil {
     public static final String CLASS_NAME_WITH_GENERIC_PATTERN_STR = "(([A-Z][a-zA-Z0-9$_]*)(<.+?>)?)";
     public static final String PARENT_CLASS_OR_INTERFACES_PATTERN_STR = "(\\s+(extends|implements)\\s+(((.|[\\n])+?)(<.+?>)?))?";
     //    public static final String PARENT_CLASS_OR_INTERFACES = "(\\s+(extends|implements)\\s+(([.\t\n]+?)(<.+?>)?))?";
-    public static final String ANNOTATION_PATTERN_STR = "(@" + CLASS_NAME_WITH_GENERIC_PATTERN_STR + "(\\([a-zA-Z0-9$_\"=,.{} ]+\\))?)*";
+    public static final String ANNOTATION_PATTERN_STR = "(@" + CLASS_NAME_WITH_GENERIC_PATTERN_STR + "(\\([a-zA-Z0-9$_\"=,.{} ]+\\))?\\s*)*";
     public static final Pattern CLASS_DECLARATION_PATTERN = Pattern.compile(
             ANNOTATION_PATTERN_STR +
                     "public(\\s+abstract)?\\s+(class|interface|@interface|enum)\\s+" +
@@ -57,12 +57,17 @@ public class SourceCodeUtil {
     /**
      * Method declaration
      */
-    public static final String RETURN_TYPE_PATTERN_STR = "(<.+?>[ ]+)?([A-Z][a-zA-Z0-9$_.]*)(<.+?>)?(\\[\\])?";
+    public static final String RETURN_TYPE_PATTERN_STR = "(<.+?>[ ]+)?([a-zA-Z0-9$_.]+)(<.+?>)?(\\[\\])?";
+    public static final String DO_NOT_MATCH_IN_METHOD_PATTERN_STR = "(?<![{};])\\s*\\n+\\s*";
+    public static final String METHOD_PARAMS_PATTERN_STR = "\\([a-zA-Z0-9$_.,?<>@\\[\\] \\n\\t]*\\)";
     public static final Pattern METHOD_DECLARATION_PATTERN = Pattern.compile(
-            ANNOTATION_PATTERN_STR +
+            DO_NOT_MATCH_IN_METHOD_PATTERN_STR +
+                    ANNOTATION_PATTERN_STR +
                     "(\\w+[ ]+)?(\\w+[ ]+)?(\\w+[ ]+)?" +
                     RETURN_TYPE_PATTERN_STR +
-                    "\\s+([a-zA-Z0-9$_]+)\\(\\s*(.*)\\)((\\s+throws\\s+.+)?\\s*\\{|\\s*;)");
+                    "\\s+([a-zA-Z0-9$_]+)" +
+                    METHOD_PARAMS_PATTERN_STR +
+                    "(\\s+throws\\s+[A-Z][a-zA-Z0-9$_]+)?(\\s*\\{|\\s*;)");
     public static final int METHOD_RETURN_TYPE_GROUP = 10;
     public static final int METHOD_NAME_GROUP = 13;
     public static final int METHOD_PARAMETER_GROUP = 14;
@@ -80,6 +85,13 @@ public class SourceCodeUtil {
                     PARENT_CLASS_OR_INTERFACES_PATTERN_STR +
                     PARENT_CLASS_OR_INTERFACES_PATTERN_STR +
                     "\\s+\\{"); // Pattern.DOTALL
+
+    public static void main(String[] args) {
+        System.out.println("class pattern: " + CLASS_DECLARATION_PATTERN.pattern());
+        System.out.println("field pattern: " + FIELD_PATTERN.pattern());
+        System.out.println("method pattern: " + METHOD_DECLARATION_PATTERN.pattern());
+        System.out.println("nested class pattern: " + NESTED_CLASS_PATTERN.pattern());
+    }
 
     /**
      * Remove comments
@@ -170,7 +182,7 @@ public class SourceCodeUtil {
         List<String> methods = new ArrayList<>();
         while (methodMatcher.find()) {
             String methodDeclarationMatch = methodMatcher.group();
-            if (methodDeclarationMatch.contains(";")) {
+            if (methodDeclarationMatch.trim().endsWith(";")) {
                 methods.add(methodDeclarationMatch);
             } else {
                 int startIndex = sourceCodeStr.indexOf(methodDeclarationMatch);
