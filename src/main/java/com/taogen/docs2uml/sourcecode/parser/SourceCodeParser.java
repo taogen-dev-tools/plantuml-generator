@@ -72,86 +72,85 @@ public class SourceCodeParser {
         SourceCodeUtil.ClassDeclaration classDeclaration = SourceCodeUtil.getClassDeclarationFromStr(sourceCodeStr);
         MyEntity entity = MyEntity.getFromClassDeclaration(classDeclaration);
         if (entity == null || entity.getType() == null ||
-                entity.getPackageName() == null || entity.getClassName() == null ) {
-            log.warn("Failed to parse file: {}",  filePath);
+                entity.getPackageName() == null || entity.getClassName() == null) {
+            log.warn("Failed to parse file: {}", filePath);
             return null;
         }
         if (commandOption.isMembersDisplayed()) {
             // fields
-            String fieldStrings = sourceCodeContent.getFields().stream().collect(Collectors.joining("\n"));
-            entity.setFields(getFieldList(fieldStrings));
+//            String fieldStrings = sourceCodeContent.getFields().stream().collect(Collectors.joining("\n"));
+            log.debug("field size: {}", sourceCodeContent.getFields().size());
+            entity.setFields(getFieldList(sourceCodeContent.getFields()));
             // methods
-            String methodStrings = sourceCodeContent.getMethods().stream().collect(Collectors.joining("\n"));
-            if (entity.getClassNameWithoutGeneric().equals("BeanFactory")) {
-                log.debug("method size: {}", sourceCodeContent.getMethods().size());
-                log.debug("methodStrings: \n{}", methodStrings);
-            }
-            entity.setMethods(getMethodList(methodStrings));
+//            String methodStrings = sourceCodeContent.getMethods().stream().collect(Collectors.joining("\n"));
+            log.debug("method size: {}", sourceCodeContent.getMethods().size());
+            entity.setMethods(getMethodList(sourceCodeContent.getMethods()));
         }
         log.debug("myEntity: {}", entity);
         return entity;
     }
 
-    private List<MyMethod> getMethodList(String methodStrings) {
-        Matcher methodMatcher = SourceCodeUtil.METHOD_DECLARATION_PATTERN.matcher(methodStrings);
+    private List<MyMethod> getMethodList(List<String> methodStrings) {
         List<MyMethod> methodList = new ArrayList<>();
-        while (methodMatcher.find()) {
-            MyMethod myMethod = new MyMethod();
-            myMethod.setName(methodMatcher.group(SourceCodeUtil.METHOD_NAME_GROUP));
-            myMethod.setReturnType(methodMatcher.group(SourceCodeUtil.METHOD_RETURN_TYPE_GROUP));
-            String parameterStr = methodMatcher.group(SourceCodeUtil.METHOD_PARAMETER_GROUP);
-            List<String> parameterStrList = SourceCodeUtil.splitParametersFromStr(parameterStr);
-            List<MyParameter> parameterList = parameterStrList.stream()
-                    .map(MyParameter::getFromStr)
-                    .collect(Collectors.toList());
-            myMethod.setParams(parameterList);
-            myMethod.setVisibility(Visibility.getVisibilityByContainsText(
-                    methodMatcher.group(SourceCodeUtil.METHOD_VISIBILITY_GROUP)));
-            Set<String> keywords = new HashSet<>();
-            if (methodMatcher.group(SourceCodeUtil.METHOD_FIRST_KEYWORD_GROUP) != null) {
-                keywords.add(methodMatcher.group(SourceCodeUtil.METHOD_FIRST_KEYWORD_GROUP).trim());
+        for (String methodString : methodStrings) {
+            Matcher methodMatcher = SourceCodeUtil.METHOD_DECLARATION_PATTERN.matcher(methodString);
+            if (methodMatcher.find()) {
+                MyMethod myMethod = new MyMethod();
+                myMethod.setName(methodMatcher.group(SourceCodeUtil.METHOD_NAME_GROUP));
+                myMethod.setReturnType(methodMatcher.group(SourceCodeUtil.METHOD_RETURN_TYPE_GROUP));
+                String parameterStr = methodMatcher.group(SourceCodeUtil.METHOD_PARAMETER_GROUP);
+                List<MyParameter> parameterList = MyParameter.getParaListFromStr(parameterStr);
+                myMethod.setParams(parameterList);
+                myMethod.setVisibility(Visibility.getVisibilityByContainsText(
+                        methodMatcher.group(SourceCodeUtil.METHOD_VISIBILITY_GROUP)));
+                Set<String> keywords = new HashSet<>();
+                if (methodMatcher.group(SourceCodeUtil.METHOD_FIRST_KEYWORD_GROUP) != null) {
+                    keywords.add(methodMatcher.group(SourceCodeUtil.METHOD_FIRST_KEYWORD_GROUP).trim());
+                }
+                if (methodMatcher.group(SourceCodeUtil.METHOD_FIRST_KEYWORD_GROUP + 1) != null) {
+                    keywords.add(methodMatcher.group(SourceCodeUtil.METHOD_FIRST_KEYWORD_GROUP + 1).trim());
+                }
+                if (methodMatcher.group(SourceCodeUtil.METHOD_FIRST_KEYWORD_GROUP + 2) != null) {
+                    keywords.add(methodMatcher.group(SourceCodeUtil.METHOD_FIRST_KEYWORD_GROUP + 2).trim());
+                }
+                myMethod.setIsStatic(keywords.contains("static"));
+                myMethod.setIsAbstract(keywords.contains("abstract"));
+                methodList.add(myMethod);
             }
-            if (methodMatcher.group(SourceCodeUtil.METHOD_FIRST_KEYWORD_GROUP + 1) != null) {
-                keywords.add(methodMatcher.group(SourceCodeUtil.METHOD_FIRST_KEYWORD_GROUP + 1).trim());
-            }
-            if (methodMatcher.group(SourceCodeUtil.METHOD_FIRST_KEYWORD_GROUP + 2) != null) {
-                keywords.add(methodMatcher.group(SourceCodeUtil.METHOD_FIRST_KEYWORD_GROUP + 2).trim());
-            }
-            myMethod.setIsStatic(keywords.contains("static"));
-            myMethod.setIsAbstract(keywords.contains("abstract"));
-            methodList.add(myMethod);
         }
         return methodList;
     }
 
-    private List<MyField> getFieldList(String sourceCodeStr) {
-        Matcher matcher = SourceCodeUtil.FIELD_PATTERN.matcher(sourceCodeStr);
+    private List<MyField> getFieldList(List<String> fieldStrings) {
         List<MyField> fieldList = new ArrayList<>();
-        while (matcher.find()) {
-            MyField field = new MyField();
-            String type = matcher.group(SourceCodeUtil.FIELD_TYPE_GROUP);
-            if (matcher.group(SourceCodeUtil.FIELD_TYPE_GROUP + 1) != null && !matcher.group(SourceCodeUtil.FIELD_TYPE_GROUP + 1).trim().isEmpty()) {
-                type += matcher.group(SourceCodeUtil.FIELD_TYPE_GROUP + 1);
+        for  (String fieldString : fieldStrings) {
+            Matcher matcher = SourceCodeUtil.FIELD_PATTERN.matcher(fieldString);
+            if (matcher.find()) {
+                MyField field = new MyField();
+                String type = matcher.group(SourceCodeUtil.FIELD_TYPE_GROUP);
+                if (matcher.group(SourceCodeUtil.FIELD_TYPE_GROUP + 1) != null && !matcher.group(SourceCodeUtil.FIELD_TYPE_GROUP + 1).trim().isEmpty()) {
+                    type += matcher.group(SourceCodeUtil.FIELD_TYPE_GROUP + 1);
+                }
+                if (matcher.group(SourceCodeUtil.FIELD_TYPE_GROUP + 2) != null && !matcher.group(SourceCodeUtil.FIELD_TYPE_GROUP + 2).trim().isEmpty()) {
+                    type += matcher.group(SourceCodeUtil.FIELD_TYPE_GROUP + 2);
+                }
+                field.setType(type);
+                field.setName(matcher.group(SourceCodeUtil.FIELD_NAME_GROUP));
+                field.setVisibility(Visibility.getVisibilityByContainsText(matcher.group(SourceCodeUtil.FIELD_VISIBILITY_GROUP)));
+                Set<String> keywords = new HashSet<>();
+                if (matcher.group(SourceCodeUtil.FIELD_FIRST_KEYWORD_GROUP) != null) {
+                    keywords.add(matcher.group(SourceCodeUtil.FIELD_FIRST_KEYWORD_GROUP).trim());
+                }
+                if (matcher.group(SourceCodeUtil.FIELD_FIRST_KEYWORD_GROUP + 1) != null) {
+                    keywords.add(matcher.group(SourceCodeUtil.FIELD_FIRST_KEYWORD_GROUP + 1).trim());
+                }
+                if (matcher.group(SourceCodeUtil.FIELD_FIRST_KEYWORD_GROUP + 2) != null) {
+                    keywords.add(matcher.group(SourceCodeUtil.FIELD_FIRST_KEYWORD_GROUP + 2).trim());
+                }
+                field.setIsStatic(keywords.contains(DecorativeKeyword.STATIC));
+                field.setIsFinal(keywords.contains(DecorativeKeyword.FINAL));
+                fieldList.add(field);
             }
-            if (matcher.group(SourceCodeUtil.FIELD_TYPE_GROUP + 2) != null && !matcher.group(SourceCodeUtil.FIELD_TYPE_GROUP + 2).trim().isEmpty()) {
-                type += matcher.group(SourceCodeUtil.FIELD_TYPE_GROUP + 2);
-            }
-            field.setType(type);
-            field.setName(matcher.group(SourceCodeUtil.FIELD_NAME_GROUP));
-            field.setVisibility(Visibility.getVisibilityByContainsText(matcher.group(SourceCodeUtil.FIELD_VISIBILITY_GROUP)));
-            Set<String> keywords = new HashSet<>();
-            if (matcher.group(SourceCodeUtil.FIELD_FIRST_KEYWORD_GROUP) != null) {
-                keywords.add(matcher.group(SourceCodeUtil.FIELD_FIRST_KEYWORD_GROUP).trim());
-            }
-            if (matcher.group(SourceCodeUtil.FIELD_FIRST_KEYWORD_GROUP + 1) != null) {
-                keywords.add(matcher.group(SourceCodeUtil.FIELD_FIRST_KEYWORD_GROUP + 1).trim());
-            }
-            if (matcher.group(SourceCodeUtil.FIELD_FIRST_KEYWORD_GROUP + 2) != null) {
-                keywords.add(matcher.group(SourceCodeUtil.FIELD_FIRST_KEYWORD_GROUP + 2).trim());
-            }
-            field.setIsStatic(keywords.contains(DecorativeKeyword.STATIC));
-            field.setIsFinal(keywords.contains(DecorativeKeyword.FINAL));
-            fieldList.add(field);
         }
         return fieldList;
     }

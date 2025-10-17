@@ -1,8 +1,10 @@
 package com.taogen.docs2uml.commons.entity;
 
+import com.taogen.docs2uml.commons.util.SourceCodeUtil;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -21,6 +23,16 @@ public class MyParameter {
     public MyParameter(String type, String name){
         this.type = type;
         this.name = name;
+    }
+
+    public static List<MyParameter> getParaListFromStr(String parameterStr) {
+        if (parameterStr == null || parameterStr.trim().isEmpty()) {
+            return new ArrayList<>();
+        }
+        List<String> parameterStrList = SourceCodeUtil.splitParametersFromStr(parameterStr);
+        return parameterStrList.stream()
+                .map(MyParameter::getFromStr)
+                .collect(Collectors.toList());
     }
 
     public static MyParameter getFromStr(String s) {
