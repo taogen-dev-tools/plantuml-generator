@@ -1,10 +1,8 @@
 package com.taogen.docs2uml.sourcecode.parser;
 
 import com.taogen.docs2uml.commons.constant.DecorativeKeyword;
-import com.taogen.docs2uml.commons.constant.EntityType;
 import com.taogen.docs2uml.commons.constant.Visibility;
 import com.taogen.docs2uml.commons.entity.*;
-import com.taogen.docs2uml.commons.util.GenericUtil;
 import com.taogen.docs2uml.commons.util.SourceCodeUtil;
 import com.taogen.docs2uml.commons.util.vo.SourceCodeContent;
 import lombok.Data;
@@ -13,7 +11,10 @@ import lombok.extern.slf4j.Slf4j;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.stream.Collectors;
 
@@ -25,15 +26,6 @@ import java.util.stream.Collectors;
 @Data
 public class SourceCodeParser {
     private int getSourceCodeContentElapsedTime = 0;
-    public static final Map<String, EntityType> STRING_TO_ENTITY_TYPE = new HashMap<>();
-
-    static {
-        STRING_TO_ENTITY_TYPE.put("public interface", EntityType.INTERFACE);
-        STRING_TO_ENTITY_TYPE.put("public class", EntityType.CLASS);
-        STRING_TO_ENTITY_TYPE.put("public enum", EntityType.ENUM);
-        STRING_TO_ENTITY_TYPE.put("public @interface", EntityType.ANNOTATION);
-        STRING_TO_ENTITY_TYPE.put("public abstract class", EntityType.ABSTRACT);
-    }
 
 
     public static void main(String[] args) throws IOException {
@@ -70,51 +62,20 @@ public class SourceCodeParser {
     }
 
     private MyEntity parseSourceCodeByRegex(String sourceCodeStr, String filePath, CommandOption commandOption) {
-        MyEntity entity = new MyEntity();
-        entity.setUrl(filePath);
-        String[] lines = sourceCodeStr.split("\n");
-        // type
-        entity.setType(getEntityType(sourceCodeStr));
-        if (entity.getType() == null) {
-            log.warn("No entity type found for file {}", filePath);
-            return null;
-        }
         SourceCodeContent sourceCodeContent = null;
-        if (commandOption.isMembersDisplayed()) {
-            long start = System.currentTimeMillis();
-            sourceCodeContent = SourceCodeUtil.getSourceCodeContent(sourceCodeStr);
-            long elapsedTime = System.currentTimeMillis() - start;
-            getSourceCodeContentElapsedTime += elapsedTime;
-        }
+        long start = System.currentTimeMillis();
+        sourceCodeContent = SourceCodeUtil.getSourceCodeContent(sourceCodeStr);
+        long elapsedTime = System.currentTimeMillis() - start;
+        getSourceCodeContentElapsedTime += elapsedTime;
 //            log.info("getSourceCodeContent Elapsed time: {}", elapsedTime);
-        // package name
-        entity.setPackageName(getPackageName(sourceCodeStr));
-        if (entity.getPackageName() == null) {
-            log.warn("No package name found for file {}", filePath);
-        }
-        // is abstract
-        entity.setIsAbstract(EntityType.ABSTRACT.equals(entity.getType()));
-        // class name
-        Matcher classNameMatcher = SourceCodeUtil.CLASS_DECLARATION_PATTERN.matcher(sourceCodeStr);
-        if (classNameMatcher.find()) {
-            log.debug("match: {}", classNameMatcher.group());
-            for (int i = 1; i <= classNameMatcher.groupCount(); i++) {
-                log.trace("group {}: {}", i, classNameMatcher.group(i));
-            }
-            entity.setClassName(classNameMatcher.group(SourceCodeUtil.CLASS_NAME_WITH_GENERIC_GROUP));
-            // parent class and interfaces
-            if (classNameMatcher.group(SourceCodeUtil.CLASS_FIRST_EXTENDS_OR_IMPLEMENTS_GROUP) != null) {
-                setParentClassOrInterfaces(lines, entity, classNameMatcher, SourceCodeUtil.CLASS_FIRST_EXTENDS_OR_IMPLEMENTS_GROUP);
-            }
-            if (classNameMatcher.group(SourceCodeUtil.CLASS_SECOND_EXTENDS_OR_IMPLEMENTS_GROUP) != null) {
-                setParentClassOrInterfaces(lines, entity, classNameMatcher, SourceCodeUtil.CLASS_SECOND_EXTENDS_OR_IMPLEMENTS_GROUP);
-            }
-        } else {
-            log.warn("Cannot parse file {}", filePath);
+        // class declaration
+        SourceCodeUtil.ClassDeclaration classDeclaration = SourceCodeUtil.getClassDeclarationFromStr(sourceCodeStr);
+        MyEntity entity = MyEntity.getFromClassDeclaration(classDeclaration);
+        if (entity == null || entity.getType() == null ||
+                entity.getPackageName() == null || entity.getClassName() == null ) {
+            log.warn("Failed to parse file: {}",  filePath);
             return null;
         }
-        entity.setClassNameWithoutGeneric(GenericUtil.removeGeneric(entity.getClassName()));
-        entity.setId(entity.getPackageName() + "." + entity.getClassNameWithoutGeneric());
         if (commandOption.isMembersDisplayed()) {
             // fields
             String fieldStrings = sourceCodeContent.getFields().stream().collect(Collectors.joining("\n"));
@@ -193,68 +154,5 @@ public class SourceCodeParser {
             fieldList.add(field);
         }
         return fieldList;
-    }
-
-    private EntityType getEntityType(String sourceCodeStr) {
-        for (Map.Entry<String, EntityType> entry : STRING_TO_ENTITY_TYPE.entrySet()) {
-            if (sourceCodeStr.contains(entry.getKey())) {
-                return entry.getValue();
-            }
-        }
-        return null;
-    }
-
-    private String getPackageName(String sourceCodeStr) {
-        Matcher packageMatcher = SourceCodeUtil.PACKAGE_PATTERN.matcher(sourceCodeStr);
-        if (packageMatcher.find()) {
-            log.debug("match: {}", packageMatcher.group());
-            for (int i = 1; i < packageMatcher.groupCount(); i++) {
-                log.trace("group {}: {}", i, packageMatcher.group(i));
-            }
-            return packageMatcher.group(1);
-        } else {
-            return null;
-        }
-    }
-
-    private void setParentClassOrInterfaces(String[] lines, MyEntity entity, Matcher classNameMatcher, int keywordGroup) {
-        String stringValue = classNameMatcher.group(keywordGroup + 2).trim();
-        log.debug("stringValue: {}", stringValue);
-        if ("extends".equals(classNameMatcher.group(keywordGroup)) &&
-                !EntityType.INTERFACE.equals(entity.getType())) {
-            MyEntity parentClass = new MyEntity();
-            parentClass.setClassName(stringValue);
-            parentClass.setClassNameWithoutGeneric(GenericUtil.removeGeneric(parentClass.getClassName()));
-            for (int i = 1; i < lines.length; i++) {
-                if (lines[i].contains("." + parentClass.getClassNameWithoutGeneric() + ";")) {
-                    parentClass.setPackageName(lines[i].substring(lines[i].indexOf("import ") + "import ".length(), lines[i].indexOf(parentClass.getClassNameWithoutGeneric()) - 1));
-                }
-            }
-            if (parentClass.getPackageName() == null) {
-                parentClass.setPackageName(entity.getPackageName());
-            }
-            parentClass.setId(parentClass.getPackageName() + "." + parentClass.getClassNameWithoutGeneric());
-            entity.setParentClass(parentClass);
-        } else {
-            List<MyEntity> parentInterfaces = GenericUtil.getClassListFromContainsGenericString(stringValue).stream()
-                    .map(String::trim)
-                    .map(name -> {
-                        MyEntity parentInterface = new MyEntity();
-                        parentInterface.setClassName(name);
-                        parentInterface.setClassNameWithoutGeneric(GenericUtil.removeGeneric(parentInterface.getClassName()));
-                        for (int i = 1; i < lines.length; i++) {
-                            if (lines[i].contains("." + parentInterface.getClassNameWithoutGeneric() + ";")) {
-                                parentInterface.setPackageName(lines[i].substring(lines[i].indexOf("import ") + "import ".length(), lines[i].indexOf(parentInterface.getClassNameWithoutGeneric()) - 1));
-                            }
-                        }
-                        if (parentInterface.getPackageName() == null) {
-                            parentInterface.setPackageName(entity.getPackageName());
-                        }
-                        parentInterface.setId(parentInterface.getPackageName() + "." + parentInterface.getClassNameWithoutGeneric());
-                        return parentInterface;
-                    })
-                    .collect(Collectors.toList());
-            entity.setParentInterfaces(parentInterfaces);
-        }
     }
 }

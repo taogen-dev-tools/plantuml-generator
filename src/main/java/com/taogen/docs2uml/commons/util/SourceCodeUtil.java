@@ -1,13 +1,14 @@
 package com.taogen.docs2uml.commons.util;
 
+import com.taogen.docs2uml.commons.constant.EntityType;
 import com.taogen.docs2uml.commons.util.vo.SourceCodeContent;
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  *
@@ -15,6 +16,16 @@ import java.util.regex.Pattern;
  */
 @Slf4j
 public class SourceCodeUtil {
+    public static final Map<String, EntityType> STRING_TO_ENTITY_TYPE = new HashMap<>();
+
+    static {
+        STRING_TO_ENTITY_TYPE.put("public interface", EntityType.INTERFACE);
+        STRING_TO_ENTITY_TYPE.put("public class", EntityType.CLASS);
+        STRING_TO_ENTITY_TYPE.put("public enum", EntityType.ENUM);
+        STRING_TO_ENTITY_TYPE.put("public @interface", EntityType.ANNOTATION);
+        STRING_TO_ENTITY_TYPE.put("public abstract class", EntityType.ABSTRACT);
+    }
+
     public static final String MAX_THREE_KEYWORDS_PATTERN_STR = "(\\w+[ ]+)?(\\w+[ ]+)?(\\w+[ ]+)?";
     public static final String IDENTIFIER_PATTERN_STR = "([a-zA-Z0-9$_]+)";
     /**
@@ -270,4 +281,108 @@ public class SourceCodeUtil {
 //                .collect(Collectors.toList());
 //        System.out.println(parameterList);
 //    }
+
+    public static String getPackageNameFromStrByRegex(String sourceCodeStr) {
+        Matcher packageMatcher = SourceCodeUtil.PACKAGE_PATTERN.matcher(sourceCodeStr);
+        if (packageMatcher.find()) {
+            log.debug("match: {}", packageMatcher.group());
+            for (int i = 1; i < packageMatcher.groupCount(); i++) {
+                log.trace("group {}: {}", i, packageMatcher.group(i));
+            }
+            return packageMatcher.group(1);
+        } else {
+            return null;
+        }
+    }
+
+    public static ClassDeclaration getClassDeclarationFromStr(String sourceCodeStr) {
+        if (sourceCodeStr == null || sourceCodeStr.trim().isEmpty()) {
+            return null;
+        }
+        ClassDeclaration entity = new ClassDeclaration();
+        // file type
+        entity.setType(getEntityType(sourceCodeStr));
+        // package name
+        entity.setPackageName(SourceCodeUtil.getPackageNameFromStrByRegex(sourceCodeStr));
+        // is abstract
+        entity.setAbstract(EntityType.ABSTRACT.equals(entity.getType()));
+        Matcher classNameMatcher = SourceCodeUtil.CLASS_DECLARATION_PATTERN.matcher(sourceCodeStr);
+        if (!classNameMatcher.find()) {
+            return null;
+        }
+        log.debug("match: {}", classNameMatcher.group());
+        for (int i = 1; i <= classNameMatcher.groupCount(); i++) {
+            log.trace("group {}: {}", i, classNameMatcher.group(i));
+        }
+        entity.setClassName(classNameMatcher.group(SourceCodeUtil.CLASS_NAME_WITH_GENERIC_GROUP));
+        entity.setClassNameWithoutGeneric(GenericUtil.removeGeneric(entity.getClassName()));
+        // parent class and interfaces
+        String[] lines = sourceCodeStr.split("\n");
+        if (classNameMatcher.group(SourceCodeUtil.CLASS_FIRST_EXTENDS_OR_IMPLEMENTS_GROUP) != null) {
+            setParentClassOrInterfaces(lines, entity, classNameMatcher, SourceCodeUtil.CLASS_FIRST_EXTENDS_OR_IMPLEMENTS_GROUP);
+        }
+        if (classNameMatcher.group(SourceCodeUtil.CLASS_SECOND_EXTENDS_OR_IMPLEMENTS_GROUP) != null) {
+            setParentClassOrInterfaces(lines, entity, classNameMatcher, SourceCodeUtil.CLASS_SECOND_EXTENDS_OR_IMPLEMENTS_GROUP);
+        }
+        return entity;
+    }
+
+    public static void setParentClassOrInterfaces(String[] lines, ClassDeclaration entity, Matcher classNameMatcher, int keywordGroup) {
+        String stringValue = classNameMatcher.group(keywordGroup + 2).trim();
+        log.debug("stringValue: {}", stringValue);
+        if ("extends".equals(classNameMatcher.group(keywordGroup)) &&
+                !EntityType.INTERFACE.equals(entity.getType())) {
+            ClassDeclaration parentClass = new ClassDeclaration();
+            parentClass.setClassName(stringValue);
+            parentClass.setClassNameWithoutGeneric(GenericUtil.removeGeneric(parentClass.getClassName()));
+            for (int i = 1; i < lines.length; i++) {
+                if (lines[i].contains("." + parentClass.getClassNameWithoutGeneric() + ";")) {
+                    parentClass.setPackageName(lines[i].substring(lines[i].indexOf("import ") + "import ".length(), lines[i].indexOf(parentClass.getClassNameWithoutGeneric()) - 1));
+                }
+            }
+            if (parentClass.getPackageName() == null) {
+                parentClass.setPackageName(entity.getPackageName());
+            }
+            entity.setParentClass(parentClass);
+        } else {
+            List<ClassDeclaration> parentInterfaces = GenericUtil.getClassListFromContainsGenericString(stringValue).stream()
+                    .map(String::trim)
+                    .map(name -> {
+                        ClassDeclaration parentInterface = new ClassDeclaration();
+                        parentInterface.setClassName(name);
+                        parentInterface.setClassNameWithoutGeneric(GenericUtil.removeGeneric(parentInterface.getClassName()));
+                        for (int i = 1; i < lines.length; i++) {
+                            if (lines[i].contains("." + parentInterface.getClassNameWithoutGeneric() + ";")) {
+                                parentInterface.setPackageName(lines[i].substring(lines[i].indexOf("import ") + "import ".length(), lines[i].indexOf(parentInterface.getClassNameWithoutGeneric()) - 1));
+                            }
+                        }
+                        if (parentInterface.getPackageName() == null) {
+                            parentInterface.setPackageName(entity.getPackageName());
+                        }
+                        return parentInterface;
+                    })
+                    .collect(Collectors.toList());
+            entity.setParentInterfaces(parentInterfaces);
+        }
+    }
+
+    public static EntityType getEntityType(String sourceCodeStr) {
+        for (Map.Entry<String, EntityType> entry : STRING_TO_ENTITY_TYPE.entrySet()) {
+            if (sourceCodeStr.contains(entry.getKey())) {
+                return entry.getValue();
+            }
+        }
+        return null;
+    }
+
+    @Data
+    public static class ClassDeclaration {
+        private EntityType type;
+        private String packageName;
+        private boolean isAbstract = false;
+        private String className;
+        private String classNameWithoutGeneric;
+        private ClassDeclaration parentClass;
+        private List<ClassDeclaration> parentInterfaces;
+    }
 }
