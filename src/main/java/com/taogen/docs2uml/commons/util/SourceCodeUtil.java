@@ -251,7 +251,6 @@ public class SourceCodeUtil {
     }
 
     private static boolean isValidTopMethodMatch(String sourceCodeStr, int methodBeginIndex) {
-        log.debug("isValidTopMethodMatch, sourceCodeStr: {}", sourceCodeStr);
         LinkedList<String> stack = new LinkedList<>();
         for (int i = 0; i < methodBeginIndex; i++) {
             if (sourceCodeStr.charAt(i) == '{') {
