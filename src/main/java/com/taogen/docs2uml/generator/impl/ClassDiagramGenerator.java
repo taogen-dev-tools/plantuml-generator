@@ -49,10 +49,10 @@ public class ClassDiagramGenerator extends AbstractGenerator {
             sb.append(commandOption.getSpecifiedClass());
         }
         if (commandOption.getSubPackage() != null && commandOption.getSubPackage()){
-            sb.append("-(contains-subpackages)");
+            sb.append("__contains-subpackages");
         }
         if (!commandOption.isMembersDisplayed()){
-            sb.append("-(without-members)");
+            sb.append("__without-members");
         }
         sb.append(".txt");
         return sb.toString();
