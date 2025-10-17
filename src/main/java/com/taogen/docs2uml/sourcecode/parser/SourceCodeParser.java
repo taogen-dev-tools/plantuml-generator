@@ -56,8 +56,7 @@ public class SourceCodeParser {
 
     public MyEntity parse(String filePath, CommandOption commandOption) throws IOException {
         log.debug("Parsing file {}", filePath);
-        MyEntity entity = new MyEntity();
-        entity.setUrl(filePath);
+        MyEntity entity = null;
         try (FileReader fr = new FileReader(filePath);
              BufferedReader br = new BufferedReader(fr)) {
             String sourceCodeStr = br.lines()
@@ -65,70 +64,80 @@ public class SourceCodeParser {
                     .filter(item -> item != null && !item.trim().isEmpty())
                     .collect(Collectors.joining(System.lineSeparator()));
 //            log.debug("sourceCodeStr:\n{}", sourceCodeStr);
-            String[] lines = sourceCodeStr.split("\n");
-            // type
-            entity.setType(getEntityType(sourceCodeStr));
-            if (entity.getType() == null) {
-                log.warn("No entity type found for file {}", filePath);
-                return null;
-            }
-            SourceCodeContent sourceCodeContent = null;
-            if (commandOption.isMembersDisplayed()) {
-                long start = System.currentTimeMillis();
-                sourceCodeContent = SourceCodeUtil.getSourceCodeContent(sourceCodeStr);
-                long elapsedTime = System.currentTimeMillis() - start;
-                getSourceCodeContentElapsedTime += elapsedTime;
-            }
-//            log.info("getSourceCodeContent Elapsed time: {}", elapsedTime);
-            // package name
-            entity.setPackageName(getPackageName(sourceCodeStr));
-            if (entity.getPackageName() == null) {
-                log.warn("No package name found for file {}", filePath);
-            }
-            // is abstract
-            entity.setIsAbstract(EntityType.ABSTRACT.equals(entity.getType()));
-            // class name
-            Matcher classNameMatcher = SourceCodeUtil.CLASS_DECLARATION_PATTERN.matcher(sourceCodeStr);
-            if (classNameMatcher.find()) {
-                log.debug("match: {}", classNameMatcher.group());
-                for (int i = 1; i <= classNameMatcher.groupCount(); i++) {
-                    log.trace("group {}: {}", i, classNameMatcher.group(i));
-                }
-                entity.setClassName(classNameMatcher.group(SourceCodeUtil.CLASS_NAME_WITH_GENERIC_GROUP));
-                // parent class and interfaces
-                if (classNameMatcher.group(SourceCodeUtil.CLASS_FIRST_EXTENDS_OR_IMPLEMENTS_GROUP) != null) {
-                    setParentClassOrInterfaces(lines, entity, classNameMatcher, SourceCodeUtil.CLASS_FIRST_EXTENDS_OR_IMPLEMENTS_GROUP);
-                }
-                if (classNameMatcher.group(SourceCodeUtil.CLASS_SECOND_EXTENDS_OR_IMPLEMENTS_GROUP) != null) {
-                    setParentClassOrInterfaces(lines, entity, classNameMatcher, SourceCodeUtil.CLASS_SECOND_EXTENDS_OR_IMPLEMENTS_GROUP);
-                }
-            } else {
-                log.warn("Cannot parse file {}", filePath);
-                return null;
-            }
-            entity.setClassNameWithoutGeneric(GenericUtil.removeGeneric(entity.getClassName()));
-            entity.setId(entity.getPackageName() + "." + entity.getClassNameWithoutGeneric());
-            if (commandOption.isMembersDisplayed()) {
-                // fields
-                String fieldStrings = sourceCodeContent.getFields().stream().collect(Collectors.joining("\n"));
-                entity.setFields(getFieldList(fieldStrings));
-                // methods
-                String methodStrings = sourceCodeContent.getMethods().stream().collect(Collectors.joining("\n"));
-                if (entity.getClassNameWithoutGeneric().equals("BeanFactory")) {
-                    log.debug("method size: {}", sourceCodeContent.getMethods().size());
-                    log.debug("methodStrings: \n{}", methodStrings);
-                }
-                entity.setMethods(getMethodList(methodStrings));
-            }
-            log.debug("myEntity: {}", entity);
+            entity = parseSourceCodeByRegex(sourceCodeStr, filePath, commandOption);
         }
+        if (entity == null) {
+            return null;
+        }
+        return entity;
+    }
+
+    private MyEntity parseSourceCodeByRegex(String sourceCodeStr, String filePath, CommandOption commandOption) {
+        MyEntity entity = new MyEntity();
+        entity.setUrl(filePath);
+        String[] lines = sourceCodeStr.split("\n");
+        // type
+        entity.setType(getEntityType(sourceCodeStr));
+        if (entity.getType() == null) {
+            log.warn("No entity type found for file {}", filePath);
+            return null;
+        }
+        SourceCodeContent sourceCodeContent = null;
+        if (commandOption.isMembersDisplayed()) {
+            long start = System.currentTimeMillis();
+            sourceCodeContent = SourceCodeUtil.getSourceCodeContent(sourceCodeStr);
+            long elapsedTime = System.currentTimeMillis() - start;
+            getSourceCodeContentElapsedTime += elapsedTime;
+        }
+//            log.info("getSourceCodeContent Elapsed time: {}", elapsedTime);
+        // package name
+        entity.setPackageName(getPackageName(sourceCodeStr));
+        if (entity.getPackageName() == null) {
+            log.warn("No package name found for file {}", filePath);
+        }
+        // is abstract
+        entity.setIsAbstract(EntityType.ABSTRACT.equals(entity.getType()));
+        // class name
+        Matcher classNameMatcher = SourceCodeUtil.CLASS_DECLARATION_PATTERN.matcher(sourceCodeStr);
+        if (classNameMatcher.find()) {
+            log.debug("match: {}", classNameMatcher.group());
+            for (int i = 1; i <= classNameMatcher.groupCount(); i++) {
+                log.trace("group {}: {}", i, classNameMatcher.group(i));
+            }
+            entity.setClassName(classNameMatcher.group(SourceCodeUtil.CLASS_NAME_WITH_GENERIC_GROUP));
+            // parent class and interfaces
+            if (classNameMatcher.group(SourceCodeUtil.CLASS_FIRST_EXTENDS_OR_IMPLEMENTS_GROUP) != null) {
+                setParentClassOrInterfaces(lines, entity, classNameMatcher, SourceCodeUtil.CLASS_FIRST_EXTENDS_OR_IMPLEMENTS_GROUP);
+            }
+            if (classNameMatcher.group(SourceCodeUtil.CLASS_SECOND_EXTENDS_OR_IMPLEMENTS_GROUP) != null) {
+                setParentClassOrInterfaces(lines, entity, classNameMatcher, SourceCodeUtil.CLASS_SECOND_EXTENDS_OR_IMPLEMENTS_GROUP);
+            }
+        } else {
+            log.warn("Cannot parse file {}", filePath);
+            return null;
+        }
+        entity.setClassNameWithoutGeneric(GenericUtil.removeGeneric(entity.getClassName()));
+        entity.setId(entity.getPackageName() + "." + entity.getClassNameWithoutGeneric());
+        if (commandOption.isMembersDisplayed()) {
+            // fields
+            String fieldStrings = sourceCodeContent.getFields().stream().collect(Collectors.joining("\n"));
+            entity.setFields(getFieldList(fieldStrings));
+            // methods
+            String methodStrings = sourceCodeContent.getMethods().stream().collect(Collectors.joining("\n"));
+            if (entity.getClassNameWithoutGeneric().equals("BeanFactory")) {
+                log.debug("method size: {}", sourceCodeContent.getMethods().size());
+                log.debug("methodStrings: \n{}", methodStrings);
+            }
+            entity.setMethods(getMethodList(methodStrings));
+        }
+        log.debug("myEntity: {}", entity);
         return entity;
     }
 
     private List<MyMethod> getMethodList(String methodStrings) {
         Matcher methodMatcher = SourceCodeUtil.METHOD_DECLARATION_PATTERN.matcher(methodStrings);
         List<MyMethod> methodList = new ArrayList<>();
-        while  (methodMatcher.find()) {
+        while (methodMatcher.find()) {
             MyMethod myMethod = new MyMethod();
             myMethod.setName(methodMatcher.group(SourceCodeUtil.METHOD_NAME_GROUP));
             myMethod.setReturnType(methodMatcher.group(SourceCodeUtil.METHOD_RETURN_TYPE_GROUP));
