@@ -49,10 +49,10 @@ public class SourceCodeParser {
         try (FileReader fr = new FileReader(filePath);
              BufferedReader br = new BufferedReader(fr)) {
             String sourceCodeStr = br.lines()
-                    .map(SourceCodeUtil::removeComments)
                     .filter(item -> item != null && !item.trim().isEmpty())
                     .collect(Collectors.joining(System.lineSeparator()));
-//            log.debug("sourceCodeStr:\n{}", sourceCodeStr);
+            sourceCodeStr = SourceCodeUtil.removeComments(sourceCodeStr);
+//            log.debug("parse() sourceCodeStr:\n{}", sourceCodeStr);
             entity = parseSourceCodeByRegex(sourceCodeStr, filePath, commandOption);
         }
         if (entity == null) {
@@ -65,6 +65,9 @@ public class SourceCodeParser {
         SourceCodeContent sourceCodeContent = null;
         long start = System.currentTimeMillis();
         sourceCodeContent = SourceCodeUtil.getSourceCodeContent(sourceCodeStr);
+        if  (sourceCodeContent == null) {
+            log.warn("Failed to parse file: {}", filePath);
+        }
         long elapsedTime = System.currentTimeMillis() - start;
         getSourceCodeContentElapsedTime += elapsedTime;
 //            log.info("getSourceCodeContent Elapsed time: {}", elapsedTime);

@@ -122,15 +122,19 @@ public class SourceCodeUtil {
      * 1) // comments...
      * 2) int a; // comments
      * 3) /**
-     * * comments
-     * *
+     * * xxxx
+     * \*\/
+     * 4) /*
+     * xxx
+     * \*\/
      *
      * @param s
      * @return
      */
     public static String removeComments(String s) {
-        return s.replaceAll("//.*$", "")
-                .replaceAll("^\\s*(/?\\*+).*$", "");
+        s = s.replaceAll("(?s)\\/\\*.*?\\*\\/", "")
+                .replaceAll("//.*", "");
+        return s;
     }
 
     public static int getPairedEndedParenthesesIndex(String sourceCodeStr, int startIndex) {
@@ -180,8 +184,10 @@ public class SourceCodeUtil {
         if (classDeclarationMatcher.find()) {
             log.debug("class declaration match: {}", classDeclarationMatcher.group());
             sourceCodeContent.setClassDeclaration(classDeclarationMatcher.group());
+        } else {
+            return null;
         }
-        sourceCodeStr = sourceCodeStr.replaceAll(SourceCodeUtil.CLASS_DECLARATION_PATTERN.pattern(), "");
+        sourceCodeStr = sourceCodeStr.replaceFirst(SourceCodeUtil.CLASS_DECLARATION_PATTERN.pattern(), "");
         sourceCodeStr = sourceCodeStr.substring(0, sourceCodeStr.lastIndexOf('}'));
 
         // Nested classes: 先定位内部类的声明行，然后通过括号匹配{}来获取完整的内部类。
@@ -206,6 +212,10 @@ public class SourceCodeUtil {
         List<String> methods = new ArrayList<>();
         while (methodMatcher.find()) {
             String methodDeclarationMatch = methodMatcher.group();
+            if (!isValidTopMethodMatch(sourceCodeStr, methodMatcher.start())) {
+                log.debug("Not valid top method match: {}", methodDeclarationMatch);
+                continue;
+            }
             if (methodDeclarationMatch.trim().endsWith(";")) {
                 methods.add(methodDeclarationMatch);
             } else {
@@ -239,6 +249,56 @@ public class SourceCodeUtil {
         }
         return sourceCodeContent;
     }
+
+    private static boolean isValidTopMethodMatch(String sourceCodeStr, int methodBeginIndex) {
+        log.debug("isValidTopMethodMatch, sourceCodeStr: {}", sourceCodeStr);
+        LinkedList<String> stack = new LinkedList<>();
+        for (int i = 0; i < methodBeginIndex; i++) {
+            if (sourceCodeStr.charAt(i) == '{') {
+                stack.push("{");
+            } else if (sourceCodeStr.charAt(i) == '}') {
+                if (stack.peek().equals("{")) {
+                    stack.pop();
+                }
+            }
+            if (sourceCodeStr.charAt(i) == '"') {
+                if (!stack.isEmpty() && stack.peek().equals("\"")) {
+                    stack.pop();
+                } else {
+                    stack.push("\"");
+                }
+            }
+        }
+        return stack.isEmpty();
+    }
+
+    public static String replaceStringWithRange(String s, int startIndex, int endIndex) {
+        char[] charArray = s.toCharArray();
+        for (int i = startIndex; i < endIndex; i++) {
+            charArray[i] = ' ';
+        }
+        return new String(charArray);
+    }
+
+    public static String replaceMatchContent(String s, Matcher matcher) {
+        int start = matcher.start();
+        int end = matcher.end();
+        char[] charArray = s.toCharArray();
+        for (int i = start; i < end; i++) {
+            charArray[i] = ' ';
+        }
+        return new String(charArray);
+    }
+
+//    public static void main(String[] args) {
+//        Pattern pattern = Pattern.compile("abc");
+//        String s = "---abc---";
+//        Matcher matcher = pattern.matcher(s);
+//        matcher.find();
+//        String s1 = replaceMatchContent(s, matcher);
+//        System.out.println(s1);
+//        System.out.println(replaceStringWithRange(s, 3, 6));
+//    }
 
     public static List<String> splitParametersFromStr(String parameterStr) {
         if (parameterStr == null || parameterStr.trim().isEmpty()) {
