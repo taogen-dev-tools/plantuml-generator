@@ -2,6 +2,7 @@ package com.taogen.docs2uml.sourcecode;
 
 import com.taogen.docs2uml.commons.entity.CommandOption;
 import com.taogen.docs2uml.commons.entity.MyEntity;
+import com.taogen.docs2uml.commons.util.CommandLineUtil;
 import com.taogen.docs2uml.generator.Generator;
 import com.taogen.docs2uml.generator.impl.ClassDiagramGenerator;
 import com.taogen.docs2uml.sourcecode.parser.SourceCodeParser;
@@ -40,7 +41,8 @@ public class Main {
         // filter myEntities for the specified class
         List<MyEntity> specifiedMyEntities = filterMyEntitiesForSpecifiedClass(myEntities, commandOption);
         // generate plantUML text
-        generatePlantUmlText(myEntities, specifiedMyEntities, commandOption);
+        String outputFilePath = generatePlantUmlText(myEntities, specifiedMyEntities, commandOption);
+        CommandLineUtil.executeCommandLine("java -DPLANTUML_LIMIT_SIZE=100000 -jar plantuml.jar " + outputFilePath);
         log.info("Elapsed time: {} ms", System.currentTimeMillis() - start);
     }
 
@@ -222,14 +224,14 @@ public class Main {
         }
     }
 
-    private static void generatePlantUmlText(List<MyEntity> myEntities,
+    private static String generatePlantUmlText(List<MyEntity> myEntities,
                                              List<MyEntity> specifiedMyEntities,
                                              CommandOption commandOption) {
         Generator generator = new ClassDiagramGenerator();
         if (commandOption.getSpecifiedClass() != null) {
-            generator.generate(specifiedMyEntities, commandOption);
+            return generator.generate(specifiedMyEntities, commandOption);
         } else {
-            generator.generate(myEntities, commandOption);
+            return generator.generate(myEntities, commandOption);
         }
     }
 }
