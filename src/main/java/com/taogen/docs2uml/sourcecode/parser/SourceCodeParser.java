@@ -87,7 +87,7 @@ public class SourceCodeParser {
             // methods
 //            String methodStrings = sourceCodeContent.getMethods().stream().collect(Collectors.joining("\n"));
             log.debug("method size: {}", sourceCodeContent.getMethods().size());
-            entity.setMethods(getMethodList(sourceCodeContent.getMethods()));
+            entity.setMethods(getMethodList(sourceCodeContent.getMethods(), commandOption));
         }
         // dependencies
         if (commandOption.isDependenciesDisplayed()) {
@@ -131,7 +131,7 @@ public class SourceCodeParser {
         return dependencies;
     }
 
-    private List<MyMethod> getMethodList(List<String> methodStrings) {
+    private List<MyMethod> getMethodList(List<String> methodStrings, CommandOption commandOption) {
         List<MyMethod> methodList = new ArrayList<>();
         for (String methodString : methodStrings) {
             Matcher methodMatcher = SourceCodeUtil.METHOD_DECLARATION_PATTERN.matcher(methodString);
@@ -158,6 +158,9 @@ public class SourceCodeParser {
                 myMethod.setIsAbstract(keywords.contains("abstract"));
                 methodList.add(myMethod);
             }
+        }
+        if (commandOption.isOnlyPublicMethodsDisplayed()) {
+            methodList.removeIf(method -> !Visibility.PUBILC.equals(method.getVisibility()));
         }
         return methodList;
     }

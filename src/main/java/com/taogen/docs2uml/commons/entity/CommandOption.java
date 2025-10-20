@@ -37,6 +37,7 @@ public class CommandOption {
     private boolean dependenciesDisplayed = false;
     private boolean membersDisplayed = false;
     private boolean staticFieldExcluded = false;
+    private boolean onlyPublicMethodsDisplayed = false;
     /**
      * Only generate classes related with the specified class
      */
