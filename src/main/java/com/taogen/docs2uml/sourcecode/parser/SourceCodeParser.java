@@ -77,7 +77,7 @@ public class SourceCodeParser {
             log.warn("Failed to parse file: {}", filePath);
             return null;
         }
-        if (commandOption.isMembersDisplayed() || commandOption.isFieldsDisplayed()) {
+        if (commandOption.isMembersDisplayed() || commandOption.isFieldsDisplayed() || commandOption.isDependenciesDisplayed()) {
             // fields
 //            String fieldStrings = sourceCodeContent.getFields().stream().collect(Collectors.joining("\n"));
             log.debug("field size: {}", sourceCodeContent.getFields().size());

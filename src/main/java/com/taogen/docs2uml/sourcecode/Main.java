@@ -111,9 +111,9 @@ public class Main {
                         toRemove.add(dependency);
                     }
                 }
+                dependencies.removeAll(toRemove);
+                dependencies.addAll(toAdd);
             }
-            dependencies.removeAll(toRemove);
-            dependencies.addAll(toAdd);
         }
     }
 

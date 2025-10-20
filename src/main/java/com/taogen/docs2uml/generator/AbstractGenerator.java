@@ -89,7 +89,9 @@ public abstract class AbstractGenerator implements Generator {
                 // entity parent interfaces
                 myEntityVo.setParentInterfaces(getParentInterfaces(myEntity.getParentInterfaces()));
                 // entity dependencies
-                myEntityVo.setDependencies(myEntity.getDependencies().stream().map(MyEntity::getClassNameWithoutGeneric).collect(Collectors.toList()));
+                if (myEntity.getDependencies() != null) {
+                    myEntityVo.setDependencies(myEntity.getDependencies().stream().map(MyEntity::getClassNameWithoutGeneric).collect(Collectors.toList()));
+                }
                 myEntityVos.add(myEntityVo);
             }
         }
