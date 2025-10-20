@@ -27,7 +27,7 @@ public class ClassDiagramGenerator extends AbstractGenerator {
     private static final Logger logger = LogManager.getLogger();
 
     @Override
-    public Boolean generate(List<MyEntity> myEntities, CommandOption commandOption) {
+    public String generate(List<MyEntity> myEntities, CommandOption commandOption) {
         logger.info("Starting generation...");
         Map<String, Object> params = getParameters(myEntities, commandOption);
         String templateFilename = "classDiagramTemplate.ftl";
@@ -37,7 +37,7 @@ public class ClassDiagramGenerator extends AbstractGenerator {
         logger.info("<<<");
         logger.info("Your plantuml text has generated to {}!", generateFilePath);
         logger.info(">>>");
-        return true;
+        return generateFilePath;
     }
 
     private String getGenerateFilename(CommandOption commandOption) {

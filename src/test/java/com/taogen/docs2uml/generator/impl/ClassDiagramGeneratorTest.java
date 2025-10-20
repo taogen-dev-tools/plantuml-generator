@@ -14,7 +14,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertNotNull;
 
 public class ClassDiagramGeneratorTest {
 
@@ -28,7 +28,7 @@ public class ClassDiagramGeneratorTest {
         CommandOption commandOption = new CommandOption("null", "java.io");
         commandOption.setMembersDisplayed(true);
         List<MyEntity> myEntities = parser.parse(document, commandOption);
-        assertTrue(classDiagramGenerator.generate(myEntities, commandOption));
+        assertNotNull(classDiagramGenerator.generate(myEntities, commandOption));
     }
 
     @Test
@@ -38,7 +38,7 @@ public class ClassDiagramGeneratorTest {
         CommandOption commandOption = new CommandOption(null, packageName, packageName);
         commandOption.setMembersDisplayed(false);
         List<MyEntity> myEntities = parser.parse(getDocument("html/java-api-java-util-NavigableMap.html"), commandOption);
-        assertTrue(classDiagramGenerator.generate(myEntities, commandOption));
+        assertNotNull(classDiagramGenerator.generate(myEntities, commandOption));
     }
 
     private Document getDocument(String filePath) throws IOException {

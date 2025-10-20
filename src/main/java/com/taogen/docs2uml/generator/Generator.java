@@ -11,9 +11,10 @@ import java.util.List;
 public interface Generator {
     /**
      * generate PlantUML text
+     *
      * @param myEntities
      * @param commandOption
-     * @return
+     * @return The output text file path
      */
-    Boolean generate(List<MyEntity> myEntities, CommandOption commandOption);
+    String generate(List<MyEntity> myEntities, CommandOption commandOption);
 }
