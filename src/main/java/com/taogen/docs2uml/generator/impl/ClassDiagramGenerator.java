@@ -42,8 +42,15 @@ public class ClassDiagramGenerator extends AbstractGenerator {
 
     private String getGenerateFilename(CommandOption commandOption) {
         StringBuilder sb = new StringBuilder();
-        sb.append("classDiagram-");
-        sb.append(commandOption.getTopPackageName().replaceAll("\\.", "-"));
+        sb.append("classDiagram");
+        if (commandOption.getSourceCodeVersion() != null && !commandOption.getSourceCodeVersion().isEmpty()) {
+            sb.append("-");
+            sb.append(commandOption.getSourceCodeVersion());
+        }
+        if (commandOption.getTopPackageName() != null && !commandOption.getTopPackageName().isEmpty()) {
+            sb.append("-");
+            sb.append(commandOption.getTopPackageName().replaceAll("\\.", "-"));
+        }
         if (commandOption.getSpecifiedClass() != null && !commandOption.getSpecifiedClass().isEmpty()){
             sb.append("-");
             sb.append(commandOption.getSpecifiedClass());
