@@ -94,7 +94,27 @@ public class Main {
             return new ArrayList<>();
         }
         linkMyEntities(myEntities, classPathToEntity);
+        refreshDependencies(myEntities, classPathToEntity);
         return getSpecifiedMyEntitiesFromLinkedMyEntities(root, classPathToEntity);
+    }
+
+    private static void refreshDependencies(List<MyEntity> myEntities, Map<String, MyEntity> classPathToEntity) {
+        for (MyEntity myEntity : myEntities) {
+            List<MyEntity> toRemove = new ArrayList<>();
+            List<MyEntity> toAdd = new ArrayList<>();
+            List<MyEntity> dependencies = myEntity.getDependencies();
+            if (dependencies != null && !dependencies.isEmpty()) {
+                for (MyEntity dependency : dependencies) {
+                    MyEntity dependencyInMap = classPathToEntity.get(dependency.getId());
+                    if (dependencyInMap != null) {
+                        toAdd.add(dependencyInMap);
+                        toRemove.add(dependency);
+                    }
+                }
+            }
+            dependencies.removeAll(toRemove);
+            dependencies.addAll(toAdd);
+        }
     }
 
     private static List<MyEntity> getSpecifiedMyEntitiesFromLinkedMyEntities(MyEntity root, Map<String, MyEntity> classPathToEntity) {

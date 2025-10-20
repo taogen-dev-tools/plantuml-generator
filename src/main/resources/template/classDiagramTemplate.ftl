@@ -6,13 +6,15 @@
 ${myEntity.type} ${myEntity.className}
 <#if myEntity.type != "annotation">
 {
-<#if commandOptions.membersDisplayed ?? && commandOptions.membersDisplayed == true>
+<#if commandOptions.membersDisplayed == true || commandOptions.fieldsDisplayed == true>
     'fields
     <#if myEntity.fields??>
     <#list myEntity.fields as field>
     ${field.visibility!""} ${field.isStatic!""} ${field.isFinal!""} ${field.type} ${field.name}
     </#list>
     </#if>
+</#if>
+<#if commandOptions.membersDisplayed == true || commandOptions.methodsDisplayed == true>
     'methods
     <#if myEntity.methods??>
     <#list myEntity.methods as method>
@@ -26,6 +28,11 @@ ${myEntity.type} ${myEntity.className}
 'relationship
 <#if myEntity.parentClass??>
 ${myEntity.parentClass} <|-- ${myEntity.classNameWithoutGeneric}
+</#if>
+<#if myEntity.dependencies??>
+    <#list myEntity.dependencies as dependencyName>
+${myEntity.classNameWithoutGeneric} --> ${dependencyName}
+    </#list>
 </#if>
 <#if myEntity.parentInterfaces??>
 <#list myEntity.parentInterfaces as interfaceName>

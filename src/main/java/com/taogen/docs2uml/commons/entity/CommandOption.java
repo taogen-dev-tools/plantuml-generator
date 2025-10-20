@@ -13,7 +13,11 @@ public class CommandOption {
     private String topPackageName;
     private String packageName;
     private Boolean subPackage;
+    private boolean fieldsDisplayed = false;
+    private boolean methodsDisplayed = false;
+    private boolean dependenciesDisplayed = false;
     private boolean membersDisplayed = false;
+    private boolean staticFieldExcluded = false;
     private String specifiedClass;
 
     public CommandOption() {

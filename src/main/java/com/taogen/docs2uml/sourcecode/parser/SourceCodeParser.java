@@ -1,6 +1,7 @@
 package com.taogen.docs2uml.sourcecode.parser;
 
 import com.taogen.docs2uml.commons.constant.DecorativeKeyword;
+import com.taogen.docs2uml.commons.constant.EntityType;
 import com.taogen.docs2uml.commons.constant.Visibility;
 import com.taogen.docs2uml.commons.entity.*;
 import com.taogen.docs2uml.commons.util.SourceCodeUtil;
@@ -11,10 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.stream.Collectors;
 
@@ -79,18 +77,58 @@ public class SourceCodeParser {
             log.warn("Failed to parse file: {}", filePath);
             return null;
         }
-        if (commandOption.isMembersDisplayed()) {
+        if (commandOption.isMembersDisplayed() || commandOption.isFieldsDisplayed()) {
             // fields
 //            String fieldStrings = sourceCodeContent.getFields().stream().collect(Collectors.joining("\n"));
             log.debug("field size: {}", sourceCodeContent.getFields().size());
-            entity.setFields(getFieldList(sourceCodeContent.getFields()));
+            entity.setFields(getFieldList(sourceCodeContent.getFields(), commandOption, entity));
+        }
+        if  (commandOption.isMembersDisplayed() || commandOption.isMethodsDisplayed()) {
             // methods
 //            String methodStrings = sourceCodeContent.getMethods().stream().collect(Collectors.joining("\n"));
             log.debug("method size: {}", sourceCodeContent.getMethods().size());
             entity.setMethods(getMethodList(sourceCodeContent.getMethods()));
         }
+        // dependencies
+        if (commandOption.isDependenciesDisplayed()) {
+            entity.setDependencies(getDependencies(entity.getFields(), sourceCodeContent.getImports(), commandOption));
+        }
+
         log.debug("myEntity: {}", entity);
         return entity;
+    }
+
+    private List<MyEntity> getDependencies(List<MyField> fields, List<String> imports, CommandOption commandOption) {
+        List<MyEntity> dependencies = new ArrayList<>();
+        Set<String> existingDependencies = new HashSet<>();
+        Set<String> exclusiveTypes = new HashSet<>(Arrays.asList("byte", "int", "long", "short", "double", "float", "boolean", "char", "String"));
+        String topPackageName = commandOption.getTopPackageName();
+        String[] split = topPackageName.split(".");
+        if (split.length > 2) {
+            topPackageName = split[0] +  "." + split[1];
+        }
+        for  (MyField field : fields) {
+            String type = field.getType();
+            if (exclusiveTypes.contains(type)) {
+                continue;
+            }
+            for (String importStr : imports) {
+                String classPath = importStr.replace("import ", "").replace(";", "").trim();
+                String className = classPath.substring(classPath.lastIndexOf(".") + 1);
+                if (className.equals(type) && classPath.startsWith(topPackageName) &&
+                        !existingDependencies.contains(classPath)) {
+                    MyEntity dependency = new MyEntity();
+                    dependency.setId(classPath);
+                    dependency.setType(EntityType.CLASS);
+                    dependency.setPackageName(classPath.substring(0, classPath.lastIndexOf(".")));
+                    dependency.setClassName(className);
+                    dependency.setClassNameWithoutGeneric(dependency.getClassName());
+                    dependencies.add(dependency);
+                    existingDependencies.add(classPath);
+                }
+            }
+        }
+        return dependencies;
     }
 
     private List<MyMethod> getMethodList(List<String> methodStrings) {
@@ -124,7 +162,7 @@ public class SourceCodeParser {
         return methodList;
     }
 
-    private List<MyField> getFieldList(List<String> fieldStrings) {
+    private List<MyField> getFieldList(List<String> fieldStrings, CommandOption commandOption, MyEntity entity) {
         List<MyField> fieldList = new ArrayList<>();
         for  (String fieldString : fieldStrings) {
             Matcher matcher = SourceCodeUtil.FIELD_PATTERN.matcher(fieldString);
@@ -139,21 +177,30 @@ public class SourceCodeParser {
                 }
                 field.setType(type);
                 field.setName(matcher.group(SourceCodeUtil.FIELD_NAME_GROUP));
-                field.setVisibility(Visibility.getVisibilityByContainsText(matcher.group(SourceCodeUtil.FIELD_VISIBILITY_GROUP)));
-                Set<String> keywords = new HashSet<>();
-                if (matcher.group(SourceCodeUtil.FIELD_FIRST_KEYWORD_GROUP) != null) {
-                    keywords.add(matcher.group(SourceCodeUtil.FIELD_FIRST_KEYWORD_GROUP).trim());
+                if (EntityType.INTERFACE.equals(entity.getType())) {
+                    field.setVisibility(Visibility.PUBILC);
+                    field.setIsStatic(true);
+                    field.setIsFinal(true);
+                } else {
+                    field.setVisibility(Visibility.getVisibilityByContainsText(matcher.group(SourceCodeUtil.FIELD_VISIBILITY_GROUP)));
+                    Set<String> keywords = new HashSet<>();
+                    if (matcher.group(SourceCodeUtil.FIELD_FIRST_KEYWORD_GROUP) != null) {
+                        keywords.add(matcher.group(SourceCodeUtil.FIELD_FIRST_KEYWORD_GROUP).trim());
+                    }
+                    if (matcher.group(SourceCodeUtil.FIELD_FIRST_KEYWORD_GROUP + 1) != null) {
+                        keywords.add(matcher.group(SourceCodeUtil.FIELD_FIRST_KEYWORD_GROUP + 1).trim());
+                    }
+                    if (matcher.group(SourceCodeUtil.FIELD_FIRST_KEYWORD_GROUP + 2) != null) {
+                        keywords.add(matcher.group(SourceCodeUtil.FIELD_FIRST_KEYWORD_GROUP + 2).trim());
+                    }
+                    field.setIsStatic(keywords.contains(DecorativeKeyword.STATIC));
+                    field.setIsFinal(keywords.contains(DecorativeKeyword.FINAL));
                 }
-                if (matcher.group(SourceCodeUtil.FIELD_FIRST_KEYWORD_GROUP + 1) != null) {
-                    keywords.add(matcher.group(SourceCodeUtil.FIELD_FIRST_KEYWORD_GROUP + 1).trim());
-                }
-                if (matcher.group(SourceCodeUtil.FIELD_FIRST_KEYWORD_GROUP + 2) != null) {
-                    keywords.add(matcher.group(SourceCodeUtil.FIELD_FIRST_KEYWORD_GROUP + 2).trim());
-                }
-                field.setIsStatic(keywords.contains(DecorativeKeyword.STATIC));
-                field.setIsFinal(keywords.contains(DecorativeKeyword.FINAL));
                 fieldList.add(field);
             }
+        }
+        if (commandOption.isStaticFieldExcluded()) {
+            fieldList.removeIf(MyField::getIsStatic);
         }
         return fieldList;
     }

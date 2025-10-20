@@ -21,6 +21,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author Taogen
@@ -87,6 +88,8 @@ public abstract class AbstractGenerator implements Generator {
                 }
                 // entity parent interfaces
                 myEntityVo.setParentInterfaces(getParentInterfaces(myEntity.getParentInterfaces()));
+                // entity dependencies
+                myEntityVo.setDependencies(myEntity.getDependencies().stream().map(MyEntity::getClassNameWithoutGeneric).collect(Collectors.toList()));
                 myEntityVos.add(myEntityVo);
             }
         }

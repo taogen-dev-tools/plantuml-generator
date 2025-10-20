@@ -32,6 +32,7 @@ public class MyEntity {
     private List<MyMethod> methods;
     private List<MyEntity> subClasses;
     private List<MyEntity> subInterfaces;
+    private List<MyEntity> dependencies;
     private boolean visited = false;
 
     public static MyEntity getFromClassDeclaration(SourceCodeUtil.ClassDeclaration classDeclaration) {

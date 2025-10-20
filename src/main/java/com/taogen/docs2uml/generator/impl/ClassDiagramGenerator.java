@@ -51,8 +51,14 @@ public class ClassDiagramGenerator extends AbstractGenerator {
         if (commandOption.getSubPackage() != null && commandOption.getSubPackage()){
             sb.append("__contains-subpackages");
         }
-        if (!commandOption.isMembersDisplayed()){
-            sb.append("__without-members");
+        if (commandOption.isMembersDisplayed() || commandOption.isFieldsDisplayed()) {
+            sb.append("__with-fields");
+        }
+        if (commandOption.isMembersDisplayed() || commandOption.isMethodsDisplayed()) {
+            sb.append("__with-methods");
+        }
+        if (commandOption.isDependenciesDisplayed()) {
+            sb.append("__with-dependencies");
         }
         sb.append(".txt");
         return sb.toString();

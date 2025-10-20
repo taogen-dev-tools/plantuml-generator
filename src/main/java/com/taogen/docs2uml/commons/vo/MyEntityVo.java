@@ -16,6 +16,7 @@ public class MyEntityVo {
     private String classNameWithoutGeneric;
     private String parentClass;
     private List<String> parentInterfaces;
+    private List<String> dependencies;
     private List<MyFieldVo> fields;
     private List<MyMethodVo> methods;
 }
