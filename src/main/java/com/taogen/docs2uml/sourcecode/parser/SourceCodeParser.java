@@ -37,6 +37,7 @@ public class SourceCodeParser {
 //        String filePath = "/Users/taogen/var/cs/repositories/personal/dev/taogen-code-source-learning/spring-framework/spring-beans/src/main/java/org/springframework/beans/factory/config/YamlMapFactoryBean.java";
         // 2. contains tab -> fix: using DOTALL
         String filePath = "/Users/taogen/var/cs/repositories/personal/dev/taogen-code-source-learning/spring-framework/spring-context/src/main/java/org/springframework/context/ApplicationContext.java";
+//        String filePath = "/Users/taogen/var/cs/repositories/personal/dev/taogen-code-source-learning/spring-framework/spring-context/src/main/java/org/springframework/context/support/AbstractApplicationContext.java";
         //===================================================
         sourceCodeParser.parse(filePath, null);
     }
@@ -62,9 +63,10 @@ public class SourceCodeParser {
     private MyEntity parseSourceCodeByRegex(String sourceCodeStr, String filePath, CommandOption commandOption) {
         SourceCodeContent sourceCodeContent = null;
         long start = System.currentTimeMillis();
-        sourceCodeContent = SourceCodeUtil.getSourceCodeContent(sourceCodeStr);
+        sourceCodeContent = SourceCodeUtil.getSourceCodeContent2(sourceCodeStr);
         if  (sourceCodeContent == null) {
             log.warn("Failed to parse file: {}", filePath);
+            return null;
         }
         long elapsedTime = System.currentTimeMillis() - start;
         getSourceCodeContentElapsedTime += elapsedTime;
@@ -80,14 +82,16 @@ public class SourceCodeParser {
         if (commandOption.isMembersDisplayed() || commandOption.isFieldsDisplayed() || commandOption.isDependenciesDisplayed()) {
             // fields
 //            String fieldStrings = sourceCodeContent.getFields().stream().collect(Collectors.joining("\n"));
-            log.debug("field size: {}", sourceCodeContent.getFields().size());
+            int fieldSize = sourceCodeContent.getFields() != null ? sourceCodeContent.getFields().size() : 0;
+            log.debug("field size: {}", fieldSize);
             entity.setFields(getFieldList(sourceCodeContent.getFields(), commandOption, entity));
         }
         if  (commandOption.isMembersDisplayed() || commandOption.isMethodsDisplayed()) {
             // methods
 //            String methodStrings = sourceCodeContent.getMethods().stream().collect(Collectors.joining("\n"));
-            log.debug("method size: {}", sourceCodeContent.getMethods().size());
-            entity.setMethods(getMethodList(sourceCodeContent.getMethods(), commandOption));
+            int methodSize = sourceCodeContent.getMethods() != null ? sourceCodeContent.getMethods().size() : 0;
+            log.debug("method size: {}", methodSize);
+            entity.setMethods(getMethodList(sourceCodeContent.getMethods(), commandOption, entity));
         }
         // dependencies
         if (commandOption.isDependenciesDisplayed()) {
@@ -131,7 +135,7 @@ public class SourceCodeParser {
         return dependencies;
     }
 
-    private List<MyMethod> getMethodList(List<String> methodStrings, CommandOption commandOption) {
+    private List<MyMethod> getMethodList(List<String> methodStrings, CommandOption commandOption, MyEntity entity) {
         List<MyMethod> methodList = new ArrayList<>();
         for (String methodString : methodStrings) {
             Matcher methodMatcher = SourceCodeUtil.METHOD_DECLARATION_PATTERN.matcher(methodString);
@@ -142,8 +146,12 @@ public class SourceCodeParser {
                 String parameterStr = methodMatcher.group(SourceCodeUtil.METHOD_PARAMETER_GROUP);
                 List<MyParameter> parameterList = MyParameter.getParaListFromStr(parameterStr);
                 myMethod.setParams(parameterList);
-                myMethod.setVisibility(Visibility.getVisibilityByContainsText(
-                        methodMatcher.group(SourceCodeUtil.METHOD_VISIBILITY_GROUP)));
+                if (EntityType.INTERFACE.equals(entity.getType())) {
+                    myMethod.setVisibility(Visibility.PUBLIC);
+                } else {
+                    myMethod.setVisibility(Visibility.getVisibilityByContainsText(
+                            methodMatcher.group(SourceCodeUtil.METHOD_VISIBILITY_GROUP)));
+                }
                 Set<String> keywords = new HashSet<>();
                 if (methodMatcher.group(SourceCodeUtil.METHOD_FIRST_KEYWORD_GROUP) != null) {
                     keywords.add(methodMatcher.group(SourceCodeUtil.METHOD_FIRST_KEYWORD_GROUP).trim());
@@ -160,7 +168,7 @@ public class SourceCodeParser {
             }
         }
         if (commandOption.isOnlyPublicMethodsDisplayed()) {
-            methodList.removeIf(method -> !Visibility.PUBILC.equals(method.getVisibility()));
+            methodList.removeIf(method -> !Visibility.PUBLIC.equals(method.getVisibility()));
         }
         return methodList;
     }
@@ -181,7 +189,7 @@ public class SourceCodeParser {
                 field.setType(type);
                 field.setName(matcher.group(SourceCodeUtil.FIELD_NAME_GROUP));
                 if (EntityType.INTERFACE.equals(entity.getType())) {
-                    field.setVisibility(Visibility.PUBILC);
+                    field.setVisibility(Visibility.PUBLIC);
                     field.setIsStatic(true);
                     field.setIsFinal(true);
                 } else {

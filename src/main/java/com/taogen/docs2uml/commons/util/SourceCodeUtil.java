@@ -26,6 +26,7 @@ public class SourceCodeUtil {
         STRING_TO_ENTITY_TYPE.put("public abstract class", EntityType.ABSTRACT);
     }
 
+    public static final Pattern ENTITY_TYPE_PATTERN = Pattern.compile("\\s+(interface|class|enum|@interface)\\s+");
     public static final String MAX_THREE_KEYWORDS_PATTERN_STR = "(\\w+[ ]+)?(\\w+[ ]+)?(\\w+[ ]+)?";
     public static final String IDENTIFIER_PATTERN_STR = "([a-zA-Z0-9$_]+)";
     /**
@@ -47,13 +48,13 @@ public class SourceCodeUtil {
     public static final String ANNOTATION_PATTERN_STR = "(@" + CLASS_NAME_WITH_GENERIC_PATTERN_STR + "(\\([a-zA-Z0-9$_\"=,.{} ]+\\))?\\s*)*";
     public static final Pattern CLASS_DECLARATION_PATTERN = Pattern.compile(
             ANNOTATION_PATTERN_STR +
-                    "public(\\s+abstract)?\\s+(class|interface|@interface|enum)\\s+" +
+                    "public(\\s+abstract)?(\\s+final)?\\s+(class|interface|@interface|enum)\\s+" +
                     CLASS_NAME_WITH_GENERIC_PATTERN_STR +
                     PARENT_CLASS_OR_INTERFACES_PATTERN_STR +
                     PARENT_CLASS_OR_INTERFACES_PATTERN_STR +
                     "\\s+\\{"); // Pattern.DOTALL
-    public static final int CLASS_NAME_WITH_GENERIC_GROUP = 8;
-    public static final int CLASS_FIRST_EXTENDS_OR_IMPLEMENTS_GROUP = 12;
+    public static final int CLASS_NAME_WITH_GENERIC_GROUP = 9;
+    public static final int CLASS_FIRST_EXTENDS_OR_IMPLEMENTS_GROUP = 13;
     public static final int CLASS_SECOND_EXTENDS_OR_IMPLEMENTS_GROUP = CLASS_FIRST_EXTENDS_OR_IMPLEMENTS_GROUP + 6;
     /**
      * Field declaration
@@ -127,13 +128,15 @@ public class SourceCodeUtil {
      * 4) /*
      * xxx
      * \*\/
+     * 5) public void test() { // comment
+     * 6) String s = "http://www.springframework.org/schema/beans";
      *
      * @param s
      * @return
      */
     public static String removeComments(String s) {
         s = s.replaceAll("(?s)\\/\\*.*?\\*\\/", "")
-                .replaceAll("//.*", "");
+                .replaceAll("(?<![:])//.*", "");
         return s;
     }
 
@@ -154,6 +157,146 @@ public class SourceCodeUtil {
             i++;
         }
         return i;
+    }
+
+    /**
+     * TODO
+     *
+     * @param sourceCodeStr
+     * @return
+     */
+    public static SourceCodeContent getSourceCodeContent2(String sourceCodeStr) {
+        if (sourceCodeStr == null || sourceCodeStr.trim().isEmpty()) {
+            return null;
+        }
+        char semicolon = ';';
+        char rightCurlyBracket = '}';
+        char leftCurlyBracket = '{';
+        int startIndex = -1;
+        Matcher classMatcher = CLASS_DECLARATION_PATTERN.matcher(sourceCodeStr);
+        Matcher entityMatcher = ENTITY_TYPE_PATTERN.matcher(sourceCodeStr);
+        if (classMatcher.find() && entityMatcher.find()) {
+            // sourceCodeStr.charAt(classMatcher.end() - 1) -> '{'
+            startIndex = classMatcher.end();
+            log.debug("class match: {}", classMatcher.group());
+            int entityTypeEnd = entityMatcher.end();
+            int classStart = classMatcher.start();
+            if (classStart > entityTypeEnd) {
+                int displayIndex = (sourceCodeStr.length() > 300) ? 300 : sourceCodeStr.length();
+                log.warn("Not a valid public class. To ignore the sourceCodeStr: {}", sourceCodeStr.substring(0, displayIndex) + "...");
+                return null;
+            }
+        } else {
+            int displayIndex = (sourceCodeStr.length() > 300) ? 300 : sourceCodeStr.length();
+            log.warn("Not a valid public class. To ignore the sourceCodeStr: {}", sourceCodeStr.substring(0, displayIndex) + "...");
+            return null;
+        }
+        int endIndex = sourceCodeStr.lastIndexOf(rightCurlyBracket);
+        if (sourceCodeStr.substring(startIndex, endIndex).trim().isEmpty()) {
+            return null;
+        }
+        SourceCodeContent sourceCodeContent = new SourceCodeContent();
+        List<Integer> blockSeparationIndexes = new ArrayList<>();
+        LinkedList<String> stack = new LinkedList<>();
+        try {
+            for (int i = startIndex; i < endIndex; i++) {
+                char c = sourceCodeStr.charAt(i);
+//                log.debug("index: {}, char: {}", i, c);
+//                if (c == '"') {
+//                    if (stack.isEmpty() || !"\"".equals(stack.peek())) {
+//                        stack.push("\"");
+//                    } else {
+//                        stack.pop();
+//                    }
+//                } else {
+//                    if (!stack.isEmpty() && "\"".equals(stack.peek())) {
+//                        continue;
+//                    }
+                    if (c == semicolon) {
+                        if (stack.isEmpty()) {
+                            blockSeparationIndexes.add(i + 1);
+                        }
+                    } else if (c == leftCurlyBracket) {
+                        stack.push("{");
+                    } else if (c == rightCurlyBracket) {
+                        stack.pop();
+                        if (stack.isEmpty()) {
+                            blockSeparationIndexes.add(i + 1);
+                        }
+                    }
+//                }
+            }
+        } catch (Exception e) {
+            log.error("Failed to parse sourceCodeStr: {}", sourceCodeStr, e);
+            System.exit(-1);
+        }
+//        log.debug("blockSeparationIndexes: {}", blockSeparationIndexes);
+        List<String> blocks = new ArrayList<>();
+        int left = startIndex;
+        for (int i = 0; i < blockSeparationIndexes.size(); i++) {
+            int right = blockSeparationIndexes.get(i);
+            log.trace("left: {}, right: {}", left, right);
+            blocks.add(sourceCodeStr.substring(left, right));
+            left = right + 1;
+        }
+//        log.debug("blocks: {}", blocks.stream().collect(Collectors.joining("\n================================================================================================\n")));
+        // packageDeclaration
+        int packageDeclarationIndex = sourceCodeStr.indexOf(';') + 1;
+        sourceCodeContent.setPackageDeclaration(sourceCodeStr.substring(0, packageDeclarationIndex));
+        // imports
+        int classDeclarationIndex = sourceCodeStr.indexOf('{');
+        String importsStr = sourceCodeStr.substring(0, classDeclarationIndex);
+        int importEndIndex = importsStr.lastIndexOf(";") + 1;
+        importsStr = importsStr.substring(packageDeclarationIndex, importEndIndex);
+        sourceCodeContent.setImports(Arrays.stream(importsStr.split(";")).map(item -> item + ";").collect(Collectors.toList()));
+        // class
+        sourceCodeContent.setClassDeclaration(sourceCodeStr.substring(importEndIndex, classDeclarationIndex + 1));
+        // Nested classes
+        List<String> nestedClasses = blocks.stream().filter(s -> s.contains(" class ")).collect(Collectors.toList());
+        sourceCodeContent.setNestedClasses(nestedClasses);
+        // Methods/Constructors
+        List<String> nestedInterfaces = blocks.stream()
+//                .filter(s -> !isFieldDeclaration(s) && !isNestedClassDeclaration(s) && !isStaticBlock(s) && s.indexOf(leftCurlyBracket) != -1 && s.indexOf('(') != -1 && s.indexOf(leftCurlyBracket) > s.indexOf('('))
+                .filter(s -> !isFieldDeclaration(s) && !isNestedClassDeclaration(s) && !isStaticBlock(s))
+                .collect(Collectors.toList());
+        sourceCodeContent.setMethods(nestedInterfaces);
+        // Fields
+        List<String> fields = blocks.stream().filter(s -> isFieldDeclaration(s)).collect(Collectors.toList());
+        sourceCodeContent.setFields(fields);
+//        log.debug("sourceCodeContent: {}", sourceCodeContent);
+        return sourceCodeContent;
+    }
+
+    public static boolean isNestedClassDeclaration(String s) {
+        if (s == null || s.trim().isEmpty()) {
+            return false;
+        }
+        return s.contains(" class ");
+    }
+
+    public static boolean isStaticBlock(String s) {
+        if (s == null || s.trim().isEmpty()) {
+            return false;
+        }
+        if (!s.trim().startsWith("static")) {
+            return false;
+        }
+        String body = s.substring(s.indexOf("static")).trim();
+        return body.charAt(0) == '{' && body.charAt(body.length() - 1) == '}';
+    }
+
+    public static boolean isFieldDeclaration(String s) {
+        if (s == null || s.trim().isEmpty()) {
+            return false;
+        }
+        if (!s.trim().endsWith(";")) {
+            return false;
+        }
+        String temp = s;
+        if (s.contains("=")) {
+            temp = s.substring(0, s.indexOf("="));
+        }
+        return !temp.contains("(") && !temp.contains(")") && !temp.contains("{") && !temp.contains("}");
     }
 
     public static SourceCodeContent getSourceCodeContent(String sourceCodeStr) {

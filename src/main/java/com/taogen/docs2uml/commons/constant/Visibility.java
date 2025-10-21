@@ -7,7 +7,7 @@ public enum Visibility {
     /**
      * public
      */
-    PUBILC,
+    PUBLIC,
     /**
      * protected
      */
@@ -29,8 +29,8 @@ public enum Visibility {
             return Visibility.PROTECTED;
         } else if (text.contains(String.valueOf(Visibility.PRIVATE).toLowerCase())) {
             return Visibility.PRIVATE;
-        } else if (text.contains(String.valueOf(Visibility.PUBILC).toLowerCase())) {
-            return Visibility.PUBILC;
+        } else if (text.contains(String.valueOf(Visibility.PUBLIC).toLowerCase())) {
+            return Visibility.PUBLIC;
         } else {
             return Visibility.DEFAULT;
         }

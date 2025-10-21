@@ -315,7 +315,7 @@ public class ClassDetailsParser extends AbstractParser {
                 isAbstract = decorativeText.contains(DecorativeKeyword.ABSTRACT);
                 codeElement = tdElements.get(1).getElementsByTag("code").first();
             } else {
-                visibility = Visibility.PUBILC;
+                visibility = Visibility.PUBLIC;
                 codeElement = tdElements.first().getElementsByTag("code").first();
             }
             methodName = codeElement.getElementsByTag("a").first().text();
