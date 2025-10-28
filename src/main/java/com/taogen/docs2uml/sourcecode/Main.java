@@ -27,12 +27,27 @@ public class Main {
     public static void main(String[] args) throws IOException {
         long start = System.currentTimeMillis();
         CommandOption commandOption = new CommandOption();
-        commandOption.setMembersDisplayed(true);
+        commandOption.setSourceCodeVersion("v6.1.x");
+        // fields
+        commandOption.setFieldsDisplayed(true);
+        commandOption.setStaticFieldExcluded(true);
+        // methods
+        commandOption.setMethodsDisplayed(true);
+        commandOption.setOnlyPublicMethodsDisplayed(true);
+        // dependencies
+        commandOption.setDependenciesDisplayed(true);
+        // package
         commandOption.setPackageName("org.springframework");
         commandOption.setTopPackageName("org.springframework");
+        // specified class
         commandOption.setSpecifiedClass("org.springframework.beans.factory.BeanFactory");
         String rootDirPath = "/Users/taogen/var/cs/repositories/personal/dev/taogen-code-source-learning/spring-framework";
         commandOption.setRootDirPath(rootDirPath);
+        generateDiagramByCommandOption(commandOption);
+        log.info("Elapsed time: {} ms", System.currentTimeMillis() - start);
+    }
+
+    private static void generateDiagramByCommandOption(CommandOption commandOption) throws IOException {
         // scan files
         Predicate<Path> matchPredicate = FilePathScanner.getSpringFrameworkMatchPredicate();
         List<String> filePaths = scanFiles(commandOption.getRootDirPath(), matchPredicate);
@@ -42,8 +57,8 @@ public class Main {
         List<MyEntity> specifiedMyEntities = filterMyEntitiesForSpecifiedClass(myEntities, commandOption);
         // generate plantUML text
         String outputFilePath = generatePlantUmlText(myEntities, specifiedMyEntities, commandOption);
+        // generate diagram image
         CommandLineUtil.executeCommandLine("java -DPLANTUML_LIMIT_SIZE=100000 -jar plantuml.jar " + outputFilePath);
-        log.info("Elapsed time: {} ms", System.currentTimeMillis() - start);
     }
 
     private static List<String> scanFiles(String rootDirPath, Predicate<Path> matchPredicate) throws IOException {
